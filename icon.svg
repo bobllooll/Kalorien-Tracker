@@ -14,5 +14,5 @@
   <path d="M382 382 L312 382 M382 382 L382 312" stroke="url(#grad)" stroke-width="36" stroke-linecap="round" fill="none"/>
   
   <!-- AI Sparkle in Center -->
-  <path d="M256 160 C256 220 256 220 352 256 C256 292 256 292 256 352 C256 292 256 292 160 256 C256 220 256 220 256 160 Z" fill="#ffffff"/>
+  <path d="M256 160 Q256 256 352 256 Q256 256 256 352 Q256 256 160 256 Q256 256 256 160 Z" fill="#ffffff"/>
 </svg>

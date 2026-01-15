@@ -62,6 +62,7 @@ const profileGeminiKey = document.getElementById('profileGeminiKey');
 const profileOpenAIKey = document.getElementById('profileOpenAIKey');
 const loadingOverlay = document.getElementById('loadingOverlay');
 const loadingText = document.getElementById('loadingText');
+const installAppBtn = document.getElementById('installAppBtn');
 
 // SVG Icons Definition
 const icons = {
@@ -971,6 +972,39 @@ function showLoading(text = "Lade...") {
 function hideLoading() {
     loadingOverlay.classList.add('hidden');
 }
+
+// --- PWA INSTALLATION LOGIC ---
+let deferredPrompt;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    // Verhindert, dass Chrome automatisch die Leiste unten anzeigt (wir wollen unseren eigenen Button)
+    e.preventDefault();
+    // Event speichern, damit wir es später auslösen können
+    deferredPrompt = e;
+    // Button anzeigen
+    installAppBtn.classList.remove('hidden');
+});
+
+installAppBtn.addEventListener('click', async () => {
+    // Button ausblenden, da der Prozess startet
+    installAppBtn.classList.add('hidden');
+    
+    if (deferredPrompt) {
+        // Installations-Prompt anzeigen
+        deferredPrompt.prompt();
+        // Warten auf die Entscheidung des Nutzers
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log(`Installations-Dialog Ergebnis: ${outcome}`);
+        // Event verwerfen, da es nur einmal genutzt werden kann
+        deferredPrompt = null;
+    }
+});
+
+window.addEventListener('appinstalled', () => {
+    // Wenn installiert, Button sicherheitshalber ausblenden
+    installAppBtn.classList.add('hidden');
+    deferredPrompt = null;
+});
 
 // --- PWA SERVICE WORKER ---
 if ('serviceWorker' in navigator) {
