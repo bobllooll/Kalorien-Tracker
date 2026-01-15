@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nutriscan-v1';
+const CACHE_NAME = 'nutriscan-v2';
 const ASSETS = [
   './',
   './index.html',
@@ -15,9 +15,31 @@ self.addEventListener('install', (e) => {
   self.skipWaiting();
 });
 
+// Aufräumen alter Caches (WICHTIG für Updates!)
+self.addEventListener('activate', (e) => {
+  e.waitUntil(
+    caches.keys().then((keyList) => {
+      return Promise.all(keyList.map((key) => {
+        if (key !== CACHE_NAME) {
+          return caches.delete(key);
+        }
+      }));
+    })
+  );
+  self.clients.claim();
+});
+
 // Anfragen abfangen (Offline-First)
 self.addEventListener('fetch', (e) => {
   e.respondWith(
-    caches.match(e.request).then((response) => response || fetch(e.request))
+    caches.match(e.request).then((response) => {
+      // Wenn im Cache, dann nehmen. Sonst Netzwerk.
+      // Wenn Netzwerk fehlschlägt (Offline) und es eine Navigation ist -> index.html
+      return response || fetch(e.request).catch(() => {
+        if (e.request.mode === 'navigate') {
+          return caches.match('./index.html');
+        }
+      });
+    })
   );
 });
