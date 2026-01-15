@@ -1,0 +1,659 @@
+body {
+    font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: #000000;
+    color: #ffffff;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+    /* Subtiler Hintergrund-Schein für Atmosphäre */
+    background-image: radial-gradient(circle at 50% 0%, #1a1a2e 0%, #000000 60%);
+    /* Verhindert "Gummiband"-Effekt beim Scrollen (Native App Feel) */
+    overscroll-behavior-y: none;
+    /* Safe Areas für iPhone X+ (Notch & Home Bar) */
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    /* Entfernt graue Tap-Boxen auf Mobile */
+    -webkit-tap-highlight-color: transparent;
+}
+
+.app-container {
+    width: 100%;
+    max-width: 480px; /* Mobile Breite simulieren */
+    background: transparent;
+    min-height: 100vh;
+    padding: 25px;
+    box-shadow: none;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    /* Mehr Platz unten für besseres Scrollen auf Mobile */
+    padding-bottom: 80px;
+}
+
+/* Auth Screen Styles */
+.auth-container {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: #000000;
+    z-index: 3000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    box-sizing: border-box;
+    /* Tiefer, atmosphärischer Hintergrund */
+    background-image: radial-gradient(circle at 50% 30%, #1c1c1e 0%, #000000 70%);
+}
+
+.auth-box {
+    width: 100%; 
+    max-width: 340px;
+    display: flex; 
+    flex-direction: column; 
+    gap: 15px;
+    text-align: center;
+    
+    /* Premium Glas-Effekt */
+    background: rgba(28, 28, 30, 0.6);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 32px;
+    padding: 40px 30px;
+    box-shadow: 0 40px 80px rgba(0,0,0,0.6);
+}
+
+.auth-box h2 {
+    margin: 0;
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: #fff;
+    margin-bottom: 5px;
+}
+
+.auth-box input {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    padding: 18px;
+    border-radius: 16px;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.auth-box input::placeholder {
+    color: #555;
+}
+
+.auth-box input:focus {
+    outline: none;
+    border-color: #fff;
+    background: rgba(0, 0, 0, 0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
+
+/* Spezifische Button-Styles für die Auth-Box überschreiben */
+.auth-box .primary-btn {
+    background: #fff;
+    color: #000;
+    border: none;
+    font-weight: 700;
+    margin-top: 10px;
+    transition: transform 0.2s;
+}
+
+.auth-box .primary-btn:hover {
+    transform: scale(1.02);
+}
+
+.auth-box .secondary-btn {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #aaa;
+}
+
+.auth-box .secondary-btn:hover {
+    border-color: #fff;
+    color: #fff;
+    background: rgba(255,255,255,0.05);
+}
+
+header h1 {
+    text-align: center;
+    color: #ffffff;
+    font-size: 1rem;
+    font-weight: 500;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    opacity: 0.8;
+    margin: 0;
+}
+
+.icon-btn {
+    background: #1c1c1e;
+    border: 1px solid #333;
+    border-radius: 50%;
+    width: 40px; height: 40px;
+    font-size: 15px;
+    font-weight: 600;
+    color: white;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: border-color 0.2s;
+}
+
+.icon-btn:hover {
+    border-color: #fff;
+}
+
+.day-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.day-nav h2 {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #fff;
+}
+
+.nav-btn {
+    background: none;
+    border: 1px solid #333;
+    color: #fff;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.nav-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.input-group {
+    margin-bottom: 25px;
+    display: flex;
+    flex-direction: column;
+}
+
+input[type="text"] {
+    padding: 18px;
+    border: 1px solid #222;
+    border-radius: 16px;
+    font-size: 16px;
+    background: #0a0a0a;
+    color: #fff;
+    transition: all 0.3s ease;
+    font-weight: 400;
+}
+
+input[type="text"]:focus {
+    outline: none;
+    border-color: #333;
+    background: #111;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
+}
+
+/* Verstecke das Standard-File-Input und style das Label als Button */
+input[type="file"] {
+    display: none;
+}
+
+.camera-btn {
+    background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
+    border: 1px solid #333;
+    color: white;
+    padding: 20px;
+    text-align: center;
+    border-radius: 18px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+.camera-btn:active {
+    transform: scale(0.98);
+    border-color: #555;
+}
+
+#preview-container {
+    margin-top: 15px;
+    text-align: center;
+}
+
+#imagePreview {
+    max-width: 100%;
+    border-radius: 18px;
+    border: 1px solid #222;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+button#analyzeBtn {
+    background: #ffffff;
+    color: #000000;
+    border: none;
+    padding: 20px;
+    border-radius: 18px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 15px;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+}
+
+button#analyzeBtn:disabled {
+    background: #222;
+    color: #666;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.result {
+    margin-top: 30px;
+    padding: 25px;
+    background: #111;
+    border-radius: 20px;
+    font-size: 16px;
+    line-height: 1.5;
+    border: 1px solid #222;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Styles für die Statistik */
+.stats-box {
+    background: #111111;
+    padding: 30px 20px;
+    border-radius: 24px;
+    border: 1px solid #222;
+    margin-bottom: 30px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+}
+
+.manual-entry-container {
+    margin-top: 30px;
+    margin-bottom: 30px;
+}
+
+.secondary-btn {
+    width: 100%;
+    padding: 15px;
+    background: #1c1c1e;
+    border: 1px solid #333;
+    color: #fff;
+    border-radius: 16px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.manual-entry-box {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    max-width: 350px;
+    z-index: 2000;
+    /* Premium Glas-Look */
+    background: rgba(30, 30, 32, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 28px;
+    padding: 30px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 100vmax rgba(0,0,0,0.85);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    /* Scrollbar für kleine Screens / Landscape */
+    max-height: 85vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+@keyframes modalPop {
+    from { opacity: 0; transform: translate(-50%, -45%) scale(0.95); }
+    to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+.manual-entry-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.manual-entry-header h3 {
+    font-size: 20px;
+    letter-spacing: -0.5px;
+}
+
+.close-modal-btn {
+    background: none;
+    border: none;
+    color: #888;
+    cursor: pointer;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.close-modal-btn:hover {
+    color: white;
+}
+
+.manual-entry-box input {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    padding: 15px;
+    border-radius: 14px;
+    font-size: 15px;
+    transition: all 0.2s ease;
+}
+
+.manual-entry-box input:focus {
+    background: rgba(0, 0, 0, 0.5);
+    border-color: #0a84ff;
+    outline: none;
+    transform: translateY(-1px);
+}
+
+.macro-inputs-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+}
+
+.primary-btn {
+    background: #0a84ff;
+    color: white;
+    border: none;
+    padding: 15px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.progress-wrapper {
+    margin-top: 10px;
+}
+
+.progress-label {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.progress-bar {
+    height: 10px;
+    background-color: #333;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.progress-bar > div {
+    height: 100%;
+    background-color: #28a745; /* Grün */
+    transition: width 0.5s ease-in-out;
+}
+
+/* Styles für die Historie */
+.history-entry {
+    background: #0a0a0a;
+    border: 1px solid #1a1a1a;
+    border-radius: 18px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #222;
+    padding-bottom: 15px;
+    cursor: pointer; /* Zeigt an, dass man klicken kann */
+}
+
+.history-header h4 {
+    margin: 0;
+    color: white;
+    word-wrap: break-word;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0; /* Wichtig: Erlaubt dem Flex-Item kleiner zu werden als der Inhalt */
+    margin-right: 10px;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.ingredient-row {
+    display: grid;
+    /* Spalten: Name (Rest) | Input (60px) | Einheit (20px) | Kcal (70px) | Löschen (30px) */
+    grid-template-columns: 1fr 60px 20px 70px 30px;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    font-size: 14px;
+    color: #888;
+    border-bottom: 1px solid #1a1a1a; /* Zarte Trennlinie für Tabellen-Look */
+    padding-bottom: 8px;
+}
+
+.ingredient-row:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.ing-name {
+    word-wrap: break-word;
+    min-width: 0;
+    padding-right: 5px;
+}
+
+.ing-unit {
+    color: #555;
+    font-size: 12px;
+}
+
+.ing-kcal {
+    text-align: right;
+    color: #aaa;
+    font-variant-numeric: tabular-nums; /* Sorgt dafür, dass Zahlen untereinander stehen */
+}
+
+.weight-input {
+    width: 100%;
+    padding: 8px 4px;
+    border: 1px solid #333;
+    background: #111;
+    color: white;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 14px;
+}
+
+.toggle-icon {
+    transition: transform 0.3s ease;
+    display: flex;
+    align-items: center;
+    color: #666;
+}
+
+.delete-ing-btn {
+    background: none;
+    border: none;
+    color: #444;
+    cursor: pointer;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s;
+    justify-self: end;
+}
+
+.delete-ing-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ff453a;
+}
+
+.delete-btn {
+    background: none;
+    border: none;
+    color: #ff453a;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px;
+}
+
+/* Styles für Makro-Nährstoffe (Runde Balken) */
+.macro-stats {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 0;
+    margin-bottom: 10px;
+}
+
+.macro-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 12px;
+    color: #666;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.macro-row {
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+    margin-top: 25px;
+}
+
+.radial-chart {
+    width: 60px;
+    height: 60px;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+/* Größere Version für die Hauptanzeige */
+.radial-chart.large {
+    width: 80px;
+    height: 80px;
+}
+
+/* Extra große Version für Kcal (Hauptanzeige) */
+.radial-chart.xlarge {
+    width: 140px;
+    height: 140px;
+}
+
+/* SVG Styles für Premium Look */
+.radial-chart svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(0deg);
+    overflow: visible; /* Wichtig für den Glow-Effekt, der über den Rand geht */
+}
+
+.chart-bg {
+    fill: none;
+    stroke: #1a1a1a; /* Sehr dunkler Track */
+    stroke-width: 2.5;
+}
+
+.chart-stroke {
+    fill: none;
+    stroke-width: 2.5;
+    stroke-linecap: round; /* Abgerundete Enden = Premium */
+    transition: stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.radial-chart span {
+    position: absolute;
+    z-index: 1;
+    font-weight: bold;
+    font-size: 12px;
+    color: white;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+}
+
+.radial-chart.xlarge span {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -1px;
+}
+
+/* SVG Icons Helper */
+.icon-svg {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+}
+
+.icon-small {
+    width: 16px;
+    height: 16px;
+}
+
+h3 {
+    color: white;
+    font-weight: 600;
+    margin-top: 0;
+}

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalorien Schätzer AI</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Login Screen -->
+        <div id="auth-screen" class="auth-container">
+            <div class="auth-box">
+                <h2>Willkommen</h2>
+                <p style="color: #888; margin-bottom: 20px;">Bitte melde dich an, um deine Daten zu speichern.</p>
+                <input type="email" id="authEmail" placeholder="E-Mail Adresse" autocomplete="username" inputmode="email">
+                <input type="password" id="authPassword" placeholder="Passwort" autocomplete="current-password">
+                <button id="loginBtn" class="primary-btn">Einloggen</button>
+                <button id="registerBtn" class="secondary-btn">Registrieren</button>
+                <p id="authError" style="color: #ff453a; margin-top: 10px; font-size: 14px;"></p>
+            </div>
+        </div>
+
+        <div id="app-content" class="hidden">
+        <header>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h1>AI Kalorien Scanner</h1>
+                <button id="openProfileBtn" class="icon-btn">👤</button>
+            </div>
+        </header>
+
+        <main>
+            <div class="day-nav">
+                <button id="prevDayBtn" class="nav-btn">&lt;</button>
+                <h2 id="currentDateDisplay">Heute</h2>
+                <button id="nextDayBtn" class="nav-btn" disabled>&gt;</button>
+            </div>
+
+            <!-- Neuer Bereich: Tagesstatistik -->
+            <div id="stats-container" class="stats-box">
+                <h3>Dein Tagesbedarf</h3>
+                <div id="dailyStats" class="macro-stats"></div>
+            </div>
+
+            <!-- Neuer Bereich: Historie & Bearbeitung -->
+            <div id="historyList"></div>
+
+            <!-- Manueller Eintrag -->
+            <div class="manual-entry-container">
+                <button id="toggleManualEntryBtn" class="secondary-btn">Snack hinzufügen +</button>
+                <div id="manualEntryForm" class="manual-entry-box hidden">
+                    <div class="manual-entry-header">
+                        <h3>Manueller Eintrag</h3>
+                        <button id="closeManualEntryBtn" class="close-modal-btn">
+                            <svg class="icon-svg" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                        </button>
+                    </div>
+                    <input type="text" id="manualName" placeholder="Name (z.B. Protein-Riegel)">
+                    <input type="number" id="manualCalories" placeholder="Kalorien" inputmode="decimal">
+                    <div class="macro-inputs-grid">
+                        <input type="number" id="manualProtein" placeholder="Prot (g)" inputmode="decimal">
+                        <input type="number" id="manualFat" placeholder="Fett (g)" inputmode="decimal">
+                        <input type="number" id="manualCarbs" placeholder="Carbs (g)" inputmode="decimal">
+                    </div>
+                    <button id="saveManualEntryBtn" class="primary-btn">Speichern</button>
+                </div>
+            </div>
+
+            <!-- Profil Modal (API Keys & Logout) -->
+            <div id="profileModal" class="manual-entry-box hidden">
+                <div class="manual-entry-header">
+                    <h3>Profil & Einstellungen</h3>
+                    <button id="closeProfileBtn" class="close-modal-btn">X</button>
+                </div>
+                <p style="color: #999; font-size: 13px; line-height: 1.5; margin-bottom: 20px;">
+                    🔒 <strong>Sicherheitshinweis:</strong> Deine API Keys werden mit deinem Passwort verschlüsselt. Das bedeutet: Du kannst dich auf jedem Gerät einloggen und hast sofort Zugriff, solange du dein Passwort kennst. Wir speichern dein Passwort niemals im Klartext.
+                </p>
+                
+                <input type="text" id="profileGeminiKey" placeholder="Google Gemini API Key">
+                <input type="text" id="profileOpenAIKey" placeholder="OpenAI API Key (Optional)">
+                <button id="saveProfileBtn" class="primary-btn">Speichern</button>
+                <button id="logoutBtn" class="secondary-btn" style="margin-top: 15px; border-color: #ff453a; color: #ff453a;">Abmelden</button>
+            </div>
+
+            <div class="input-group">
+                <label for="cameraInput" class="camera-btn">
+                    <svg class="icon-svg" viewBox="0 0 24 24">
+                        <path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/>
+                    </svg>
+                    Foto aufnehmen
+                </label>
+                <!-- capture="environment" öffnet auf Handys direkt die Hauptkamera -->
+                <input type="file" id="cameraInput" accept="image/*" capture="environment">
+                <div id="preview-container">
+                    <img id="imagePreview" alt="Vorschau" style="display: none;">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <input type="text" id="descriptionInput" placeholder="Zusätzliche Beschreibung (z.B. 'Mit extra Käse')">
+            </div>
+
+            <div class="input-group">
+                <input type="text" id="formatInput" placeholder="Format (z.B. 'Nur Kalorien' oder 'Detailliert')">
+            </div>
+
+            <button id="analyzeBtn" disabled>Kalorien schätzen</button>
+
+            <div id="resultArea" class="result hidden"></div>
+        </main>
+        </div>
+    </div>
+    <script type="module" src="app.js"></script>
+</body>
+</html>
