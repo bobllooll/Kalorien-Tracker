@@ -1,9 +1,10 @@
 // Importiere das offizielle Google AI SDK für den Browser
 import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
 // Importiere Firebase SDKs
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
 
 // --- FIREBASE KONFIGURATION ---
 // 1. Gehe auf console.firebase.google.com
@@ -23,6 +24,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const analytics = getAnalytics(app);
 
 const cameraInput = document.getElementById('cameraInput');
 const imagePreview = document.getElementById('imagePreview');
@@ -58,6 +60,8 @@ const saveProfileBtn = document.getElementById('saveProfileBtn');
 const logoutBtn = document.getElementById('logoutBtn');
 const profileGeminiKey = document.getElementById('profileGeminiKey');
 const profileOpenAIKey = document.getElementById('profileOpenAIKey');
+const loadingOverlay = document.getElementById('loadingOverlay');
+const loadingText = document.getElementById('loadingText');
 
 // SVG Icons Definition
 const icons = {
@@ -125,33 +129,71 @@ onAuthStateChanged(auth, async (user) => {
 
 // Login
 loginBtn.addEventListener('click', async () => {
+    const originalText = loginBtn.textContent;
+    loginBtn.disabled = true;
+    authError.textContent = "";
+    
     try {
+        loginBtn.textContent = "Verbinde...";
         const userCredential = await signInWithEmailAndPassword(auth, authEmail.value, authPassword.value);
         
         // Schlüssel aus Passwort ableiten und speichern
+        loginBtn.textContent = "Entschlüssle...";
+        // Kleiner Timeout, damit der Browser das UI rendern kann (PBKDF2 blockiert kurz)
+        await new Promise(r => setTimeout(r, 50));
+        
         const key = await deriveKeyFromPassword(authPassword.value, userCredential.user.uid);
         const exported = await crypto.subtle.exportKey("jwk", key);
         localStorage.setItem('app_encryption_key', JSON.stringify(exported));
         
         // Daten neu laden (falls onAuthStateChanged zu schnell war)
+        loginBtn.textContent = "Lade Daten...";
         await loadUserData();
         updateUIForDate();
     } catch (error) {
-        authError.textContent = "E-Mail oder Passwort ungültig.";
+        console.error(error);
+        if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+            authError.textContent = "Die Zugangsdaten stimmen nicht.";
+        } else if (error.code === 'auth/too-many-requests') {
+            authError.textContent = "Zu viele Versuche. Bitte warte kurz.";
+        } else {
+            authError.textContent = "Anmeldung fehlgeschlagen. Bitte prüfe deine Internetverbindung.";
+        }
+    } finally {
+        loginBtn.disabled = false;
+        loginBtn.textContent = originalText;
     }
 });
 
 // Registrieren
 registerBtn.addEventListener('click', async () => {
+    const originalText = registerBtn.textContent;
+    registerBtn.disabled = true;
+    authError.textContent = "";
+
     try {
+        registerBtn.textContent = "Erstelle Konto...";
         const userCredential = await createUserWithEmailAndPassword(auth, authEmail.value, authPassword.value);
         
         // Schlüssel aus Passwort ableiten und speichern
+        registerBtn.textContent = "Verschlüssle...";
+        await new Promise(r => setTimeout(r, 50));
+
         const key = await deriveKeyFromPassword(authPassword.value, userCredential.user.uid);
         const exported = await crypto.subtle.exportKey("jwk", key);
         localStorage.setItem('app_encryption_key', JSON.stringify(exported));
     } catch (error) {
-        authError.textContent = "Registrierung fehlgeschlagen.";
+        console.error(error);
+        if (error.code === 'auth/email-already-in-use') {
+            authError.textContent = "Diese E-Mail wird schon verwendet.";
+        } else if (error.code === 'auth/weak-password') {
+            authError.textContent = "Das Passwort ist zu schwach (min. 6 Zeichen).";
+        } else {
+            authError.textContent = "Registrierung hat nicht geklappt.";
+        }
+    } finally {
+        registerBtn.disabled = false;
+        registerBtn.textContent = originalText;
     }
 });
 
@@ -236,22 +278,23 @@ analyzeBtn.addEventListener('click', async function() {
     if (!selectedFile) return;
 
     // UI Feedback: Laden starten
-    analyzeBtn.textContent = "Analysiere...";
-    analyzeBtn.disabled = true;
-    resultArea.classList.add('hidden');
-    resultArea.innerHTML = '';
+    showLoading("Analysiere Bild...");
+    
+    // resultArea.classList.add('hidden'); // Lassen wir sichtbar für smootheren Übergang
+    // resultArea.innerHTML = ''; // Nicht sofort löschen
 
     const userText = descriptionInput.value;
 
     if (!API_KEY) {
         alert("Bitte hinterlege erst deinen Gemini API Key im Profil!");
         profileModal.classList.remove('hidden');
-        analyzeBtn.disabled = false;
+        hideLoading();
         return;
     }
 
     try {
         // 1. Bild komprimieren (nur einmal nötig)
+        loadingText.textContent = "Optimiere Bild...";
         const base64Data = await compressImage(selectedFile, 800, 0.7);
         const finalMimeType = 'image/jpeg';
 
@@ -273,10 +316,12 @@ analyzeBtn.addEventListener('click', async function() {
         const prompt = `Du bist ein professioneller Ernährungsberater. Deine Aufgabe ist es, die Kalorien dieses Gerichts extrem präzise zu schätzen.
         
         WICHTIG:
-        1. Benenne das GERICHT als Ganzes (z.B. "Spaghetti Bolognese" statt "Nudeln, Soße, Fleisch"). Der Name muss kurz und prägnant sein.
-        2. Analysiere die Zutaten einzeln.
+        1. Prüfe, ob es sich um ein Lebensmittel handelt. Wenn nicht, setze "isFood" auf false.
+        2. Benenne das GERICHT als Ganzes (z.B. "Spaghetti Bolognese" statt "Nudeln, Soße, Fleisch"). Der Name muss kurz und prägnant sein.
+        3. Analysiere die Zutaten einzeln.
         
         Gib mir ein JSON-Objekt zurück mit:
+        - isFood (Boolean, true wenn Essen/Trinken, sonst false)
         - name (String, kurzer Name des Gerichts)
         - ingredients (Array von Objekten, jede Zutat hat:
             - name (String)
@@ -295,6 +340,7 @@ analyzeBtn.addEventListener('click', async function() {
             if (jsonResponse) break; // Schon erfolgreich
 
             try {
+                loadingText.textContent = `Frage KI (${strategy.model})...`;
                 console.log(`Versuche Modell: ${strategy.model}...`);
 
                 if (strategy.type === 'gemini') {
@@ -335,6 +381,20 @@ analyzeBtn.addEventListener('click', async function() {
             throw new Error(`Alle Modelle fehlgeschlagen. Letzter Fehler: ${lastError?.message}`);
         }
 
+        // Prüfung: Ist es überhaupt Essen?
+        if (jsonResponse.isFood === false) {
+            resultArea.innerHTML = `
+                <div style="text-align: center; padding: 30px;">
+                    <div style="font-size: 50px; margin-bottom: 15px;">🚫</div>
+                    <h3>Kein Essen erkannt</h3>
+                    <p style="color: #888; margin-top: 10px;">Das sieht nicht nach einem Gericht aus.<br>Es wurde nichts gespeichert.</p>
+                </div>
+            `;
+            resultArea.classList.remove('hidden');
+            hideLoading();
+            return;
+        }
+
         // Datum und Zeitstempel hinzufügen, damit wir die Historie nach Tagen sortieren können
         const now = new Date();
         jsonResponse.date = currentDate.toISOString().split('T')[0]; // Zum aktuell angezeigten Tag hinzufügen
@@ -366,8 +426,7 @@ analyzeBtn.addEventListener('click', async function() {
         resultArea.innerHTML = `<p style="color:red;">Fehler: ${error.message}</p>`;
         resultArea.classList.remove('hidden');
     } finally {
-        analyzeBtn.textContent = "Kalorien schätzen";
-        analyzeBtn.disabled = false;
+        hideLoading();
     }
 });
 
@@ -884,3 +943,13 @@ document.addEventListener('click', (e) => {
         if (navigator.vibrate) navigator.vibrate(10); // 10ms Vibration (sehr subtil)
     }
 });
+
+// --- UI HELPER ---
+function showLoading(text = "Lade...") {
+    loadingText.textContent = text;
+    loadingOverlay.classList.remove('hidden');
+}
+
+function hideLoading() {
+    loadingOverlay.classList.add('hidden');
+}

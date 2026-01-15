@@ -657,3 +657,53 @@ h3 {
     font-weight: 600;
     margin-top: 0;
 }
+
+/* Lade-Overlay */
+.loading-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    z-index: 5000;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+.spinner {
+    width: 60px;
+    height: 60px;
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.spinner::before, .spinner::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    inset: 0;
+    border: 3px solid transparent;
+    transition: all 0.3s;
+}
+
+.spinner::before {
+    border-top-color: #0a84ff;
+    border-right-color: #0a84ff;
+    animation: spin 1.5s linear infinite;
+    box-shadow: 0 0 15px rgba(10, 132, 255, 0.5);
+}
+
+.spinner::after {
+    border-bottom-color: #30d158;
+    border-left-color: #30d158;
+    animation: spin 1.5s linear infinite reverse;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
