@@ -29,7 +29,6 @@ const imagePreview = document.getElementById('imagePreview');
 const analyzeBtn = document.getElementById('analyzeBtn');
 const resultArea = document.getElementById('resultArea');
 const descriptionInput = document.getElementById('descriptionInput');
-const formatInput = document.getElementById('formatInput');
 const dailyStats = document.getElementById('dailyStats');
 const historyList = document.getElementById('historyList');
 const prevDayBtn = document.getElementById('prevDayBtn');
@@ -243,7 +242,6 @@ analyzeBtn.addEventListener('click', async function() {
     resultArea.innerHTML = '';
 
     const userText = descriptionInput.value;
-    const userFormat = formatInput.value;
 
     if (!API_KEY) {
         alert("Bitte hinterlege erst deinen Gemini API Key im Profil!");
