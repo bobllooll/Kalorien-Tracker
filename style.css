@@ -707,3 +707,13 @@ h3 {
 @keyframes spin {
     to { transform: rotate(360deg); }
 }
+
+/* Disclaimer Text */
+.disclaimer-text {
+    text-align: center;
+    font-size: 11px;
+    color: #666;
+    margin-top: 30px;
+    padding: 0 10px;
+    opacity: 0.7;
+}

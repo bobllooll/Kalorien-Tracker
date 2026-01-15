@@ -423,7 +423,25 @@ analyzeBtn.addEventListener('click', async function() {
 
     } catch (error) {
         console.error(error);
-        resultArea.innerHTML = `<p style="color:red;">Fehler: ${error.message}</p>`;
+        
+        let title = "Fehler bei der Analyse";
+        let message = error.message;
+        let icon = "⚠️";
+
+        // Prüfen ob es sich um ein Limit-Problem handelt (429 = Too Many Requests / Quota Exceeded)
+        if (message.includes('429') || message.includes('quota') || message.includes('exhausted')) {
+            title = "Tageslimit erreicht";
+            message = "Die kostenlosen Anfragen für deine API-Keys sind für heute aufgebraucht. Bitte versuche es morgen wieder oder prüfe deine Keys im Profil.";
+            icon = "⏳";
+        }
+
+        resultArea.innerHTML = `
+            <div style="text-align: center; padding: 30px 20px;">
+                <div style="font-size: 48px; margin-bottom: 15px;">${icon}</div>
+                <h3 style="color: #ff453a; margin-bottom: 10px;">${title}</h3>
+                <p style="color: #999; line-height: 1.5;">${message}</p>
+            </div>
+        `;
         resultArea.classList.remove('hidden');
     } finally {
         hideLoading();
@@ -952,4 +970,11 @@ function showLoading(text = "Lade...") {
 
 function hideLoading() {
     loadingOverlay.classList.add('hidden');
+}
+
+// --- PWA SERVICE WORKER ---
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js');
+    });
 }
