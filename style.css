@@ -241,6 +241,11 @@ input[type="file"] {
     box-shadow: 0 4px 20px rgba(0,0,0,0.3);
 }
 
+/* Anpassung für die Buttons nebeneinander */
+.camera-btn svg {
+    flex-shrink: 0;
+}
+
 .camera-btn:active {
     transform: scale(0.98);
     border-color: #555;

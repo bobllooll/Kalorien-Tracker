@@ -40,6 +40,7 @@ const toggleManualEntryBtn = document.getElementById('toggleManualEntryBtn');
 const manualEntryForm = document.getElementById('manualEntryForm');
 const closeManualEntryBtn = document.getElementById('closeManualEntryBtn');
 const saveManualEntryBtn = document.getElementById('saveManualEntryBtn');
+const scanInManualBtn = document.getElementById('scanInManualBtn');
 const manualName = document.getElementById('manualName');
 const manualCalories = document.getElementById('manualCalories');
 const manualProtein = document.getElementById('manualProtein');
@@ -63,6 +64,17 @@ const profileOpenAIKey = document.getElementById('profileOpenAIKey');
 const loadingOverlay = document.getElementById('loadingOverlay');
 const loadingText = document.getElementById('loadingText');
 const installAppBtn = document.getElementById('installAppBtn');
+// Scanner Elemente
+const startScannerBtn = document.getElementById('startScannerBtn');
+const scannerModal = document.getElementById('scannerModal');
+const closeScannerBtn = document.getElementById('closeScannerBtn');
+const barcodeResultModal = document.getElementById('barcodeResultModal');
+const closeBarcodeResultBtn = document.getElementById('closeBarcodeResultBtn');
+const barcodeProductName = document.getElementById('barcodeProductName');
+const barcode100gInfo = document.getElementById('barcode100gInfo');
+const barcodeWeight = document.getElementById('barcodeWeight');
+const barcodeCalculatedStats = document.getElementById('barcodeCalculatedStats');
+const saveBarcodeEntryBtn = document.getElementById('saveBarcodeEntryBtn');
 
 // SVG Icons Definition
 const icons = {
@@ -85,6 +97,8 @@ let calorieHistory = { entries: [] }; // Lokaler Cache der Daten
 
 let selectedFile = null;
 let currentDate = new Date();
+let html5QrCode = null; // Scanner Instanz
+let currentBarcodeData = null; // Zwischenspeicher für gefundenes Produkt
 
 // --- AUTHENTIFIZIERUNG LOGIK ---
 
@@ -633,6 +647,12 @@ closeManualEntryBtn.addEventListener('click', () => {
     manualEntryForm.classList.add('hidden');
 });
 
+scanInManualBtn.addEventListener('click', () => {
+    manualEntryForm.classList.add('hidden');
+    scannerModal.classList.remove('hidden');
+    startCamera();
+});
+
 saveManualEntryBtn.addEventListener('click', () => {
     const name = manualName.value.trim();
     const calories = parseFloat(manualCalories.value) || 0;
@@ -1012,3 +1032,143 @@ if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('./sw.js');
     });
 }
+
+// --- BARCODE SCANNER LOGIK ---
+
+startScannerBtn.addEventListener('click', () => {
+    scannerModal.classList.remove('hidden');
+    startCamera();
+});
+
+closeScannerBtn.addEventListener('click', () => {
+    stopCamera();
+    scannerModal.classList.add('hidden');
+});
+
+function startCamera() {
+    // Prüfen ob Bibliothek geladen ist
+    if (!window.Html5Qrcode) {
+        alert("Scanner Bibliothek wird noch geladen. Bitte kurz warten.");
+        return;
+    }
+
+    html5QrCode = new Html5Qrcode("reader");
+    const config = { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 };
+    
+    // Kamera starten (Rückkamera bevorzugt)
+    html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, onScanFailure)
+    .catch(err => {
+        console.error("Kamera Fehler:", err);
+        alert("Kamera konnte nicht gestartet werden. Bitte Berechtigung prüfen.");
+        scannerModal.classList.add('hidden');
+    });
+}
+
+function stopCamera() {
+    if (html5QrCode && html5QrCode.isScanning) {
+        html5QrCode.stop().then(() => {
+            html5QrCode.clear();
+        }).catch(err => console.error("Stop failed", err));
+    }
+}
+
+function onScanFailure(error) {
+    // Rauschen ignorieren, passiert oft wenn kein Code im Bild ist
+}
+
+async function onScanSuccess(decodedText, decodedResult) {
+    // Scan stoppen
+    stopCamera();
+    scannerModal.classList.add('hidden');
+    showLoading("Suche Produkt...");
+
+    try {
+        // Open Food Facts API abfragen
+        const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${decodedText}.json`);
+        const data = await response.json();
+
+        if (data.status === 1) {
+            const p = data.product;
+            
+            // Relevante Daten extrahieren (Fallback auf 0 wenn nicht vorhanden)
+            currentBarcodeData = {
+                name: p.product_name || "Unbekanntes Produkt",
+                calories100: p.nutriments['energy-kcal_100g'] || 0,
+                protein100: p.nutriments.proteins_100g || 0,
+                fat100: p.nutriments.fat_100g || 0,
+                carbs100: p.nutriments.carbohydrates_100g || 0
+            };
+
+            showBarcodeResultModal();
+        } else {
+            alert("Produkt nicht gefunden in der Datenbank.");
+        }
+    } catch (error) {
+        console.error(error);
+        alert("Fehler beim Abrufen der Produktdaten.");
+    } finally {
+        hideLoading();
+    }
+}
+
+function showBarcodeResultModal() {
+    barcodeProductName.textContent = currentBarcodeData.name;
+    barcode100gInfo.textContent = `${Math.round(currentBarcodeData.calories100)} kcal / 100g`;
+    barcodeWeight.value = 100; // Reset auf 100g
+    updateBarcodeStats(); // Initiale Berechnung
+    barcodeResultModal.classList.remove('hidden');
+}
+
+function updateBarcodeStats() {
+    const weight = parseFloat(barcodeWeight.value) || 0;
+    const factor = weight / 100;
+    
+    const cal = Math.round(currentBarcodeData.calories100 * factor);
+    const p = Math.round(currentBarcodeData.protein100 * factor);
+    const f = Math.round(currentBarcodeData.fat100 * factor);
+    const c = Math.round(currentBarcodeData.carbs100 * factor);
+
+    barcodeCalculatedStats.innerHTML = `
+        <div style="font-size: 24px; font-weight: bold; margin-bottom: 10px;">${cal} kcal</div>
+        <div style="display: flex; justify-content: center; gap: 15px; font-size: 14px; color: #aaa;">
+            <span>P: ${p}g</span>
+            <span>F: ${f}g</span>
+            <span>K: ${c}g</span>
+        </div>
+    `;
+}
+
+barcodeWeight.addEventListener('input', updateBarcodeStats);
+
+closeBarcodeResultBtn.addEventListener('click', () => barcodeResultModal.classList.add('hidden'));
+
+saveBarcodeEntryBtn.addEventListener('click', () => {
+    const weight = parseFloat(barcodeWeight.value) || 0;
+    if (weight <= 0) return;
+
+    const factor = weight / 100;
+    const entry = {
+        name: currentBarcodeData.name,
+        date: toISODateString(currentDate),
+        timestamp: new Date().getTime(),
+        calories: currentBarcodeData.calories100 * factor,
+        protein: currentBarcodeData.protein100 * factor,
+        fat: currentBarcodeData.fat100 * factor,
+        carbs: currentBarcodeData.carbs100 * factor,
+        ingredients: [{
+            name: currentBarcodeData.name,
+            weight: weight,
+            calories: currentBarcodeData.calories100 * factor,
+            protein: currentBarcodeData.protein100 * factor,
+            fat: currentBarcodeData.fat100 * factor,
+            carbs: currentBarcodeData.carbs100 * factor
+        }],
+        reasoning: "Barcode Scan",
+        expanded: false
+    };
+
+    saveToHistory(entry);
+    renderHistory();
+    updateStatsUI();
+    barcodeResultModal.classList.add('hidden');
+});
