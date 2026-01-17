@@ -223,66 +223,105 @@ input[type="file"] {
     display: none;
 }
 
-.camera-btn {
-    background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
+/* Neues Action Grid für Hauptbuttons */
+.action-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.action-card {
+    background: #1c1c1e;
     border: 1px solid #333;
-    color: white;
-    padding: 20px;
-    text-align: center;
-    border-radius: 18px;
-    cursor: pointer;
-    font-weight: 500;
-    font-size: 16px;
+    border-radius: 20px;
+    padding: 20px 15px;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 10px;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-}
-
-/* Anpassung für die Buttons nebeneinander */
-.camera-btn svg {
-    flex-shrink: 0;
-}
-
-.camera-btn:active {
-    transform: scale(0.98);
-    border-color: #555;
-}
-
-#preview-container {
-    margin-top: 15px;
     text-align: center;
+    cursor: pointer;
+    transition: transform 0.2s, border-color 0.2s;
+    min-height: 140px;
+    position: relative;
+    overflow: hidden;
+}
+
+.action-card:active {
+    transform: scale(0.96);
+}
+
+.ai-card {
+    background: linear-gradient(145deg, #1c1c1e, #252528);
+    border-color: #0a84ff;
+}
+
+.recipe-card {
+    background: linear-gradient(145deg, #1c1c1e, #2c1c2e);
+    border-color: #9c27b0;
+}
+
+.card-icon {
+    font-size: 32px;
+    margin-bottom: 10px;
+}
+
+.card-title {
+    font-weight: 700;
+    font-size: 16px;
+    margin-bottom: 4px;
+}
+
+.card-desc {
+    font-size: 11px;
+    color: #888;
+    line-height: 1.3;
+}
+
+/* Neues Analyse Modal Layout */
+.analysis-layout {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    background: #111;
+    padding: 15px;
+    border-radius: 16px;
+    border: 1px solid #222;
+}
+
+.image-wrapper {
+    width: 80px;
+    height: 80px;
+    flex-shrink: 0;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #333;
 }
 
 #imagePreview {
-    max-width: 100%;
-    border-radius: 18px;
-    border: 1px solid #222;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-}
-
-button#analyzeBtn {
-    background: #ffffff;
-    color: #000000;
-    border: none;
-    padding: 20px;
-    border-radius: 18px;
-    font-size: 18px;
-    font-weight: 600;
-    cursor: pointer;
     width: 100%;
-    margin-top: 15px;
-    transition: transform 0.2s, box-shadow 0.2s;
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+    height: 100%;
+    object-fit: cover;
 }
 
-button#analyzeBtn:disabled {
-    background: #222;
-    color: #666;
-    cursor: not-allowed;
-    box-shadow: none;
+.input-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+#descriptionInput {
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: white;
+    font-family: inherit;
+    font-size: 14px;
+    resize: none;
+    outline: none;
+    padding: 0;
+    box-sizing: border-box;
 }
 
 .result {
@@ -307,6 +346,132 @@ button#analyzeBtn:disabled {
     border: 1px solid #222;
     margin-bottom: 30px;
     box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+}
+
+/* Wasser Tracker Styles */
+.water-box {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.water-info {
+    z-index: 2;
+}
+
+.water-info h3 {
+    margin-bottom: 5px;
+    color: #64d2ff;
+}
+
+.water-info p {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0 0 15px 0;
+    color: white;
+}
+
+.water-controls {
+    display: flex;
+    gap: 10px;
+}
+
+.water-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    border: 1px solid rgba(100, 210, 255, 0.3);
+    background: rgba(100, 210, 255, 0.1);
+    color: #64d2ff;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.water-btn:active {
+    background: rgba(100, 210, 255, 0.3);
+    transform: scale(0.95);
+}
+
+.water-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    border-color: #444;
+    color: #666;
+}
+
+.bottle-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: flex-end;
+    max-width: 60%; /* Damit der Text links noch Platz hat */
+}
+
+.bottle {
+    width: 32px;
+    height: 54px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px 20px 10px 10px;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(5px);
+    flex-shrink: 0;
+}
+
+.water-fill {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 0%; /* Wird per JS gesteuert */
+    background: #0a84ff;
+    transition: height 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 0 20px rgba(10, 132, 255, 0.5);
+}
+
+/* Wellen-Animation (Pseudo-Elemente) */
+.water-fill::before, .water-fill::after {
+    content: "";
+    position: absolute;
+    width: 140px;
+    height: 140px;
+    left: -54px; /* Zentriert über der 32px breiten Flasche (32/2 - 140/2 = -54) */
+    top: -130px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 40%;
+    animation: wave-spin 6s linear infinite;
+    animation-play-state: running; /* Immer an */
+}
+
+.water-fill::after {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 45%;
+    animation: wave-spin 10s linear infinite;
+    animation-play-state: running; /* Immer an */
+    top: -135px;
+}
+
+/* Große Flasche (wenn nur 1 angezeigt wird) */
+.bottle.large {
+    width: 60px;
+    height: 100px;
+}
+
+.bottle.large .water-fill::before, 
+.bottle.large .water-fill::after {
+    left: -40px; /* Zentriert für 60px Breite (60/2 - 140/2 = -40) */
+}
+
+@keyframes wave-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
 }
 
 .manual-entry-container {
@@ -394,6 +559,8 @@ button#analyzeBtn:disabled {
     border-radius: 14px;
     font-size: 15px;
     transition: all 0.2s ease;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .manual-entry-box input:focus {
@@ -403,10 +570,249 @@ button#analyzeBtn:disabled {
     transform: translateY(-1px);
 }
 
-.macro-inputs-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+/* Styles für das neue manuelle Menü */
+.search-container {
+    margin-bottom: 15px;
+}
+
+.search-input-group {
+    display: flex;
+    align-items: center;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 5px;
+}
+
+.search-icon {
+    padding: 0 10px;
+    font-size: 14px;
+    color: #666;
+}
+
+.search-input-group input {
+    border: none !important;
+    background: transparent !important;
+    padding: 10px 0 !important;
+    margin: 0 !important;
+    flex: 1;
+    box-shadow: none !important;
+}
+
+.amount-row {
+    display: flex;
     gap: 10px;
+}
+
+.amount-row input {
+    flex: 1;
+    min-width: 0; /* WICHTIG: Erlaubt dem Feld zu schrumpfen, verhindert Overflow */
+    width: 100%;
+    font-size: 26px; /* Groß, aber passt besser auf Mobile */
+    padding: 15px 10px;
+    font-weight: bold;
+    text-align: center;
+    background: rgba(255,255,255,0.08); /* Leicht hervorheben */
+    border-radius: 14px;
+}
+
+.small-select {
+    width: 90px !important; /* Etwas kompakter */
+    flex: 0 0 90px;
+    text-align: center;
+    padding: 0 5px;
+    font-size: 16px;
+    font-weight: 600;
+    background: rgba(255,255,255,0.1);
+}
+
+/* Quick Amount Buttons (Chips) */
+.quick-amounts {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.quick-amt-btn {
+    flex: 1;
+    padding: 10px 5px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    color: #ccc;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.quick-amt-btn:active {
+    background: rgba(255,255,255,0.2);
+    transform: scale(0.95);
+}
+
+.search-go-btn {
+    background: #333;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 15px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.form-divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 20px 0;
+    color: #555;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.form-divider::before, .form-divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.form-divider span {
+    padding: 0 10px;
+}
+
+.manual-form-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 5px;
+    margin-left: 5px;
+}
+
+.input-with-unit {
+    position: relative;
+}
+
+.input-with-unit input {
+    padding-right: 50px;
+}
+
+.input-with-unit span {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #666;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.macros-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.macro-input {
+    background: rgba(255,255,255,0.03);
+    border-radius: 12px;
+    padding: 10px;
+    text-align: center;
+    border: 1px solid transparent;
+    transition: border-color 0.2s;
+}
+
+.macro-input label {
+    font-size: 11px;
+    margin-bottom: 5px;
+    display: block;
+    color: #aaa;
+}
+
+.macro-input input {
+    width: 100%;
+    text-align: center;
+    background: transparent !important;
+    border: none !important;
+    padding: 5px 0 !important;
+    font-size: 16px !important;
+    font-weight: bold;
+    box-shadow: none !important;
+}
+
+/* Profil Styles */
+.profile-section {
+    margin-bottom: 15px;
+}
+
+.section-title {
+    color: #888;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+    margin-top: 0;
+}
+
+.profile-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.macro-input.calories { border-color: rgba(255, 87, 34, 0.3); }
+.macro-input.calories input { color: #ff5722; }
+
+.macro-input.protein { border-color: rgba(52, 152, 219, 0.3); }
+.macro-input.protein input { color: #3498db; }
+
+.macro-input.fat { border-color: rgba(241, 196, 15, 0.3); }
+.macro-input.fat input { color: #f1c40f; }
+
+.macro-input.carbs { border-color: rgba(46, 204, 113, 0.3); }
+.macro-input.carbs input { color: #2ecc71; }
+
+.styled-select {
+    width: 100%;
+    padding: 12px;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: white;
+    border-radius: 12px;
+    font-size: 14px;
+    appearance: none; /* Entfernt Standard-Pfeil */
+    box-sizing: border-box;
+}
+
+/* Neue Info Box (versteckt) */
+.info-box {
+    background: rgba(10, 132, 255, 0.1);
+    border: 1px solid rgba(10, 132, 255, 0.2);
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Scanner Video Vollbild erzwingen */
+#reader video {
+    object-fit: cover !important;
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 0 !important;
 }
 
 .primary-btn {
@@ -731,4 +1137,123 @@ h3 {
     margin-top: 30px;
     padding: 0 10px;
     opacity: 0.7;
+}
+
+/* Suchergebnisse im manuellen Modus */
+.search-results {
+    max-height: 150px;
+    overflow-y: auto;
+    margin-bottom: 15px;
+    background: rgba(0,0,0,0.2);
+    border-radius: 12px;
+    display: none; /* Standardmäßig versteckt */
+}
+
+.search-result-item {
+    padding: 10px 15px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    cursor: pointer;
+    font-size: 14px;
+}
+
+/* Flexbox für Bild + Text */
+.search-result-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.search-result-img {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    object-fit: cover;
+    background: rgba(255,255,255,0.05);
+    flex-shrink: 0;
+}
+
+.search-result-img.placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+}
+
+.search-result-item:hover {
+    background: rgba(255,255,255,0.1);
+}
+
+/* Rezepte Liste */
+.recipes-list {
+    max-height: 60vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.recipe-item {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.recipe-item:hover {
+    background: rgba(255,255,255,0.1);
+}
+
+/* Toast Notifications */
+#toast-container {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 90%;
+    max-width: 400px;
+    pointer-events: none; /* Klicks gehen durch den Container durch */
+}
+
+.toast {
+    background: rgba(30, 30, 32, 0.95);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    color: white;
+    padding: 16px 20px;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.1);
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    animation: toastSlideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    pointer-events: auto;
+}
+
+.toast.success { border-left: 4px solid #30d158; }
+.toast.error { border-left: 4px solid #ff453a; }
+.toast.info { border-left: 4px solid #0a84ff; }
+
+.toast.fade-out {
+    animation: toastFadeOut 0.3s forwards;
+}
+
+@keyframes toastSlideUp {
+    from { opacity: 0; transform: translateY(20px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes toastFadeOut {
+    to { opacity: 0; transform: translateY(-10px) scale(0.95); }
 }

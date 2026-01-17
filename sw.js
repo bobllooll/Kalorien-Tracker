@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nutriscan-v5';
+const CACHE_NAME = 'nutriscan-v39';
 const ASSETS = [
   './',
   './index.html',
@@ -35,10 +35,11 @@ self.addEventListener('fetch', (e) => {
     caches.match(e.request).then((response) => {
       // Wenn im Cache, dann nehmen. Sonst Netzwerk.
       // Wenn Netzwerk fehlschlägt (Offline) und es eine Navigation ist -> index.html
-      return response || fetch(e.request).catch(() => {
+      return response || fetch(e.request).catch((error) => {
         if (e.request.mode === 'navigate') {
           return caches.match('./index.html');
         }
+        throw error; // WICHTIG: Fehler weiterwerfen, damit app.js ihn fangen kann!
       });
     })
   );
