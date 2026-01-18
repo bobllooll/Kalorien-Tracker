@@ -2,11 +2,11 @@
   <defs>
     <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#0a84ff"/>
-      <stop offset="100%" stop-color="#bf5af2"/>
+      <stop offset="100%" stop-color="#30d158"/>
     </linearGradient>
   </defs>
   <rect width="512" height="512" rx="128" fill="#1c1c1e"/>
-  <path d="M160 64h-48a48 48 0 0 0-48 48v48m0 192v48a48 48 0 0 0 48 48h48m192-384h48a48 48 0 0 1 48 48v48m0 192v48a48 48 0 0 1-48 48h-48" 
+  <path d="M160 112h-48a48 48 0 0 0-48 48v48m0 96v48a48 48 0 0 0 48 48h48m192-288h48a48 48 0 0 1 48 48v48m0 96v48a48 48 0 0 1-48 48h-48" 
         fill="none" stroke="url(#g)" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M256 120c0 0 30 96 136 136 0 0-106 40-136 136 0 0-30-96-136-136 0 0 106-40 136-136z" fill="url(#g)"/>
+  <circle cx="256" cy="256" r="64" fill="url(#g)"/>
 </svg>

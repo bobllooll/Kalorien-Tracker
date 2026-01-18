@@ -1380,3 +1380,11 @@ input:checked + .slider:before { transform: translateX(20px); }
     pointer-events: none;
     transition: opacity 0.5s ease-out;
 }
+
+/* Snack hinzufügen Button wieder weiß */
+#toggleManualEntryBtn {
+    background: #ffffff;
+    color: #000000;
+    border: none;
+    font-weight: 700;
+}
