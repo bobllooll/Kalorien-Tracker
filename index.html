@@ -226,7 +226,10 @@
                 </div>
 
                 <div class="profile-section" style="margin-top: 20px; border-top: 1px solid #222; padding-top: 20px;">
-                    <h4 class="section-title">API Keys (Erweitert)</h4>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <h4 class="section-title" style="margin: 0;">API Keys (Erweitert)</h4>
+                        <span id="apiUsageDisplay" style="font-size: 11px; color: #666; background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 6px;">Heute: 0</span>
+                    </div>
                     <input type="text" id="profileGeminiKey" placeholder="Google Gemini API Key" style="margin-bottom: 10px;">
                     <input type="text" id="profileOpenAIKey" placeholder="OpenAI API Key (Optional)">
                 </div>
@@ -270,6 +273,31 @@
                         <textarea id="descriptionInput" placeholder="z.B. 'nur die Hälfte gegessen' oder 'mit extra Käse'" rows="2"></textarea>
                     </div>
                 </div>
+                
+                <!-- Hybrid Mode Toggle -->
+                <div class="toggle-row">
+                    <div style="flex: 1;">
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <div style="font-weight: 600; font-size: 14px;">Marken-Scan (Hybrid)</div>
+                            <svg id="hybridInfoBtn" class="icon-svg" viewBox="0 0 24 24" style="width: 16px; height: 16px; color: #0a84ff; cursor: pointer; opacity: 0.8;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                        </div>
+                        <div style="font-size: 11px; color: #888;">Für verpackte Produkte (Datenbank-Check)</div>
+                    </div>
+                    <label class="switch"><input type="checkbox" id="hybridModeToggle"><span class="slider"></span></label>
+                </div>
+                
+                <div id="hybridInfoText" class="info-box hidden" style="margin-top: -5px;">
+                    <p style="margin: 0; font-size: 12px; color: #ccc; line-height: 1.4;">
+                        <strong>So funktioniert's:</strong><br>
+                        1. Die KI sucht nach Marken/Produkten (z.B. "Barilla Pesto").<br>
+                        2. App lädt <strong>echte Nährwerte</strong> aus der Datenbank.<br>
+                        3. KI berechnet damit die exakte Menge.<br>
+                        <em style="color: #0a84ff; display: block; margin-top: 5px;">Ideal für Supermarkt-Produkte, nicht für Selbstgekochtes.</em>
+                        <br>
+                        <span style="color: #ff453a; display: block; margin-top: 8px; font-weight: bold;">⚠️ Hinweis: Verbraucht 2 API-Anfragen! (Google Free Tier hat ca. 20 Anfragen/Tag).</span>
+                    </p>
+                </div>
+
                 <button id="analyzeBtn" class="primary-btn" style="margin-top: 10px;">Jetzt analysieren ✨</button>
             </div>
 

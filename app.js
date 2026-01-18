@@ -76,6 +76,7 @@ const logoutBtn = document.getElementById('logoutBtn');
 const profileGeminiKey = document.getElementById('profileGeminiKey');
 const profileOpenAIKey = document.getElementById('profileOpenAIKey');
 // Neue Profil Felder
+const apiUsageDisplay = document.getElementById('apiUsageDisplay');
 const profileGoal = document.getElementById('profileGoal');
 const profileWeight = document.getElementById('profileWeight');
 const profileHeight = document.getElementById('profileHeight');
@@ -96,6 +97,9 @@ const closeCreateRecipeBtn = document.getElementById('closeCreateRecipeBtn');
 const saveNewRecipeBtn = document.getElementById('saveNewRecipeBtn');
 const recipeInputs = { name: document.getElementById('recipeName'), cal: document.getElementById('recipeCalories'), p: document.getElementById('recipeProtein'), f: document.getElementById('recipeFat'), c: document.getElementById('recipeCarbs') };
 
+const hybridModeToggle = document.getElementById('hybridModeToggle');
+const hybridInfoBtn = document.getElementById('hybridInfoBtn');
+const hybridInfoText = document.getElementById('hybridInfoText');
 
 const loadingOverlay = document.getElementById('loadingOverlay');
 const loadingText = document.getElementById('loadingText');
@@ -138,7 +142,9 @@ let OPENAI_API_KEY = null; // Wird aus Firebase geladen
 let calorieHistory = { entries: [] }; // Lokaler Cache der Daten
 let userGoals = { calories: 2500, protein: 150, fat: 80, carbs: 300, water: 2500 }; // Standardwerte
 let userRecipes = []; // Lokaler Cache der Rezepte
+let apiUsage = { date: '', count: 0 }; // API Nutzung Zähler
 
+let currentAiResult = null; // Globaler Zwischenspeicher für das aktuelle KI-Ergebnis
 let selectedFile = null;
 let currentDate = new Date();
 let html5QrCode = null; // Scanner Instanz
@@ -286,6 +292,17 @@ async function loadUserData() {
         if (data.recipes) {
             userRecipes = data.recipes;
         }
+        // API Nutzung laden
+        if (data.apiUsage) {
+            const today = toISODateString(new Date());
+            if (data.apiUsage.date === today) {
+                apiUsage = data.apiUsage;
+            } else {
+                apiUsage = { date: today, count: 0 }; // Neuer Tag, Reset
+            }
+        }
+        updateApiUsageDisplay();
+
         // Profil-Daten für Berechnung füllen (falls vorhanden)
         if (data.profileData) {
             profileGoal.value = data.profileData.goal || 'maintain';
@@ -338,7 +355,8 @@ async function saveUserData() {
         history: calorieHistory,
         goals: newGoals,
         profileData: profileData,
-        recipes: userRecipes
+        recipes: userRecipes,
+        apiUsage: apiUsage
     }, { merge: true });
 }
 
@@ -413,6 +431,10 @@ if (infoIconBtn) {
     infoIconBtn.addEventListener('click', () => infoText.classList.toggle('hidden'));
 }
 
+if (hybridInfoBtn) {
+    hybridInfoBtn.addEventListener('click', () => hybridInfoText.classList.toggle('hidden'));
+}
+
 // Event Listener für Bildauswahl
 cameraInput.addEventListener('change', function(event) {
     const file = event.target.files[0];
@@ -445,12 +467,21 @@ analyzeBtn.addEventListener('click', async function() {
     // resultArea.innerHTML = ''; // Nicht sofort löschen
 
     const userText = descriptionInput.value;
+    const useHybridMode = hybridModeToggle.checked;
+
+    console.group("📸 START AI ANALYSIS");
+    console.log("📥 INPUTS:", { 
+        userText: userText, 
+        hybridMode: useHybridMode,
+        imageSelected: !!selectedFile 
+    });
 
     if (!API_KEY) {
         showToast("Bitte API Key im Profil hinterlegen!", "error");
         profileModal.classList.remove('hidden');
         hideLoading();
         analysisModal.classList.remove('hidden'); // Karte wieder zeigen bei Fehler
+        console.groupEnd();
         return;
     }
 
@@ -459,6 +490,7 @@ analyzeBtn.addEventListener('click', async function() {
         loadingText.textContent = "Optimiere Bild...";
         const base64Data = await compressImage(selectedFile, 800, 0.7);
         const finalMimeType = 'image/jpeg';
+        console.log("🖼️ Image compressed. Length:", base64Data.length);
 
         // SDK initialisieren
         const genAI = new GoogleGenerativeAI(API_KEY);
@@ -473,7 +505,6 @@ analyzeBtn.addEventListener('click', async function() {
         let jsonResponse = null;
         let usedModelName = "";
         let lastError = null;
-        let currentAiResult = null; // Zwischenspeicher für Rezept-Speicherung
 
         // 3. Prompt definieren
         const prompt = `Du bist ein professioneller Ernährungsberater. Deine Aufgabe ist es, die Kalorien dieses Gerichts extrem präzise zu schätzen.
@@ -481,12 +512,15 @@ analyzeBtn.addEventListener('click', async function() {
         WICHTIG:
         1. Prüfe, ob es sich um ein Lebensmittel handelt. Wenn nicht, setze "isFood" auf false.
         2. Benenne das GERICHT als Ganzes (z.B. "Spaghetti Bolognese" statt "Nudeln, Soße, Fleisch"). Der Name muss kurz und prägnant sein.
-        3. Analysiere die Zutaten einzeln.
+        3. Analysiere ALLE sichtbaren Komponenten einzeln (auch bei ungewöhnlichen Kombinationen, z.B. Schnitzel und Schokoriegel).
         4. Achte auf Mengenangaben im Nutzertext (z.B. "3 Stück", "2 Teller", "Hälfte").
+        5. Falls du eine konkrete Marke oder Produktverpackung erkennst, fülle das Feld "productSearchQuery" mit dem genauen Produktnamen (z.B. "Vemondo Veganer Käse"). Sonst null.
+        ${useHybridMode ? '6. HYBRID-MODUS AKTIV: Der Nutzer möchte einen Datenbank-Abgleich. Versuche besonders genau, Marken oder Produktnamen zu erkennen und in "productSearchQuery" einzutragen.' : ''}
         
         Gib mir ein JSON-Objekt zurück mit:
         - isFood (Boolean, true wenn Essen/Trinken, sonst false)
         - name (String, kurzer Name des Gerichts)
+        - productSearchQuery (String, Suchbegriff für Datenbank falls Markenprodukt, sonst null)
         - amount (Number, Anzahl der Portionen/Stück basierend auf Nutzerinfo. Standard ist 1)
         - calories (Number, Kalorien für EINE Portion/Stück (nicht Gesamt, falls amount > 1))
         - protein (Number, Protein für EINE Portion/Stück)
@@ -504,6 +538,8 @@ analyzeBtn.addEventListener('click', async function() {
         
         ${userText ? 'Wichtige Zusatzinfo vom Nutzer: ' + userText : ''}`;
 
+        console.log("📝 PROMPT:", prompt);
+
         // 4. Modelle nacheinander testen
         for (const strategy of strategies) {
             if (jsonResponse) break; // Schon erfolgreich
@@ -511,6 +547,8 @@ analyzeBtn.addEventListener('click', async function() {
             try {
                 loadingText.textContent = `Frage KI (${strategy.model})...`;
                 console.log(`Versuche Modell: ${strategy.model}...`);
+                console.time(`AI Request (${strategy.model})`);
+                incrementApiUsage(); // API Aufruf zählen
 
                 if (strategy.type === 'gemini') {
                     const model = genAI.getGenerativeModel({ 
@@ -528,10 +566,9 @@ analyzeBtn.addEventListener('click', async function() {
                         }
                     ]);
 
-                    const responseText = result.response.text();
-                    // Markdown entfernen und Whitespace trimmen, um JSON-Fehler zu vermeiden
-                    const cleanedText = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
-                    jsonResponse = JSON.parse(cleanedText);
+                    const text = result.response.text();
+                    console.log("📨 RAW RESPONSE:", text);
+                    jsonResponse = safeJsonParse(text);
                     usedModelName = strategy.model;
 
                 } else if (strategy.type === 'openai') {
@@ -539,12 +576,16 @@ analyzeBtn.addEventListener('click', async function() {
                         console.log("Überspringe GPT-4o (Kein API Key)");
                         continue;
                     }
-                    jsonResponse = await callOpenAI(base64Data, prompt);
+                    const openAiRes = await callOpenAI(base64Data, prompt);
+                    console.log("📨 RAW RESPONSE (OpenAI):", openAiRes);
+                    jsonResponse = openAiRes;
                     usedModelName = strategy.model;
                 }
+                console.timeEnd(`AI Request (${strategy.model})`);
 
             } catch (error) {
                 console.warn(`Fehler mit ${strategy.model}:`, error);
+                console.timeEnd(`AI Request (${strategy.model})`);
                 lastError = error;
             }
         }
@@ -552,6 +593,8 @@ analyzeBtn.addEventListener('click', async function() {
         if (!jsonResponse) {
             throw new Error(`Alle Modelle fehlgeschlagen. Letzter Fehler: ${lastError?.message}`);
         }
+
+        console.log("✅ PARSED JSON (Initial):", jsonResponse);
 
         // Prüfung: Ist es überhaupt Essen?
         if (jsonResponse.isFood === false) {
@@ -565,7 +608,140 @@ analyzeBtn.addEventListener('click', async function() {
             resultArea.classList.remove('hidden');
             hideLoading();
             analysisModal.classList.remove('hidden'); // Karte wieder zeigen damit man es nochmal versuchen kann
+            console.groupEnd();
             return;
+        }
+
+        // --- HYBRID SCAN LOGIK: Datenbank-Check ---
+        if (useHybridMode) {
+            console.group("🔄 HYBRID CHECK");
+            if (jsonResponse.productSearchQuery) {
+                try {
+                    showLoading(`Datenbank-Check: "${jsonResponse.productSearchQuery}"...`);
+                    
+                    let offData;
+                    try {
+                        // Versuch 1: Alte API (Bessere Treffer)
+                        const offRes = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(jsonResponse.productSearchQuery)}&search_simple=1&action=process&json=1&page_size=1&fields=product_name,nutriments`);
+                        offData = await offRes.json();
+                        console.log("📦 OFF API V1 Result:", offData);
+                    } catch (e) {
+                        // Versuch 2: Neue API (Fallback)
+                        console.warn("Fallback auf API V2 für Hybrid-Check");
+                        const offRes = await fetch(`https://world.openfoodfacts.org/api/v2/search?search_terms=${encodeURIComponent(jsonResponse.productSearchQuery)}&page_size=1&fields=product_name,nutriments`);
+                        offData = await offRes.json();
+                        console.log("📦 OFF API V2 Result:", offData);
+                    }
+
+                    if (offData.products && offData.products.length > 0) {
+                        const p = offData.products[0];
+                        // Prüfen ob wir brauchbare Nährwerte haben
+                        if (p.nutriments && p.nutriments['energy-kcal_100g']) {
+                            const dbInfo = {
+                                name: p.product_name,
+                                calories_100g: p.nutriments['energy-kcal_100g'],
+                                protein_100g: p.nutriments.proteins_100g || 0,
+                                fat_100g: p.nutriments.fat_100g || 0,
+                                carbs_100g: p.nutriments.carbohydrates_100g || 0
+                            };
+
+                            console.log("💎 FOUND DB INFO:", dbInfo);
+                            showLoading("Optimiere mit echten Werten...");
+
+                            // ZWEITER KI-AUFRUF: Mit echten Daten verfeinern
+                            incrementApiUsage(); // Zählt als zweiter Aufruf
+                            
+                            // Context aus Schritt 1 vorbereiten
+                            const step1Amount = jsonResponse.amount || 1;
+                            const step1Weight = jsonResponse.ingredients ? jsonResponse.ingredients.reduce((acc, i) => acc + (i.weight || 0), 0) : 0;
+
+                            const refinePrompt = `
+                                CONTEXT FROM STEP 1 (Visual Estimate):
+                                - User/AI identified: "${jsonResponse.name}"
+                                - Visual Amount: ${step1Amount} (piece/serving)
+                                - Estimated Weight: ${step1Weight}g
+
+                                DATABASE MATCH:
+                                - Name: ${dbInfo.name}
+                                - Values per 100g: ${dbInfo.calories_100g} kcal, ${dbInfo.protein_100g} P, ${dbInfo.fat_100g} F, ${dbInfo.carbs_100g} C.
+
+                                AUFGABE:
+                                1. SCHAU DIR DAS BILD NOCHMAL GENAU AN.
+                                2. Nutze die Datenbank-Werte für das identifizierte Produkt.
+                                3. Berechne die Nährwerte für GENAU EINE (1) Portion/Stück.
+                                
+                                WICHTIG - GEMISCHTE TELLER:
+                                Falls das Bild noch ANDERE Lebensmittel enthält (z.B. Schnitzel neben dem Riegel), die NICHT Teil des Datenbank-Produkts sind:
+                                - Schätze diese visuell und ADDIERE sie zu den Werten.
+                                - Erwähne dies im Reasoning (z.B. "Werte für Duplo (DB) + geschätztes Schnitzel").
+                                
+                                Gib mir ein JSON-Objekt zurück mit folgendem Format (keine Strings bei Zahlen!):
+                                {
+                                    "name": "${dbInfo.name}", // Ggf. anpassen wenn gemischt
+                                    "amount": ${step1Amount},
+                                    "calories": (Number, Wert für 1 Stück/Portion),
+                                    "protein": (Number, Wert für 1 Stück/Portion),
+                                    "fat": (Number, Wert für 1 Stück/Portion),
+                                    "carbs": (Number, Wert für 1 Stück/Portion),
+                                    "reasoning": "Erklärung der Berechnung..."
+                                }
+                                Antworte NUR mit validem JSON.
+                            `;
+
+                            console.log("📝 REFINE PROMPT:", refinePrompt);
+
+                            let refinedJson = null;
+                            // Wir nutzen das gleiche Modell wie beim ersten erfolgreichen Versuch
+                            if (usedModelName.includes('gpt')) {
+                                refinedJson = await callOpenAI(base64Data, refinePrompt);
+                            } else {
+                                const model = genAI.getGenerativeModel({ model: usedModelName, generationConfig: { responseMimeType: "application/json" }});
+                                const result = await model.generateContent([refinePrompt, { inlineData: { data: base64Data, mimeType: finalMimeType } }]);
+                                const text = result.response.text();
+                                console.log("📨 REFINE RAW RESPONSE:", text);
+                                refinedJson = safeJsonParse(text);
+                            }
+
+                            if (refinedJson) {
+                                // WICHTIG: Zutaten aus Schritt 1 retten und anpassen!
+                                if (jsonResponse.ingredients && jsonResponse.ingredients.length > 0) {
+                                    refinedJson.ingredients = jsonResponse.ingredients;
+                                    
+                                    // Skalierungsfaktor berechnen (Verhältnis: Neue Kcal / Alte Kcal)
+                                    const oldCal = jsonResponse.calories || 1;
+                                    const newCal = refinedJson.calories || 0;
+                                    
+                                    if (oldCal > 0 && newCal > 0) {
+                                        const ratio = newCal / oldCal;
+                                        refinedJson.ingredients.forEach(ing => {
+                                            ing.weight = (ing.weight || 0) * ratio;
+                                            ing.calories = (ing.calories || 0) * ratio;
+                                            ing.protein = (ing.protein || 0) * ratio;
+                                            ing.fat = (ing.fat || 0) * ratio;
+                                            ing.carbs = (ing.carbs || 0) * ratio;
+                                        });
+                                    }
+                                }
+
+                                jsonResponse = refinedJson; // Das verbesserte Ergebnis übernehmen
+                                jsonResponse.isDbVerified = true; // Markierung für UI
+                                console.log("✨ REFINED JSON:", refinedJson);
+                                showToast("Mit Datenbank-Werten verbessert!", "success");
+                            }
+                        } else {
+                            showToast("Produkt gefunden, aber keine Nährwerte.", "info");
+                        }
+                    } else {
+                        showToast("Produkt nicht in Datenbank gefunden.", "info");
+                    }
+                } catch (dbError) {
+                    console.warn("Datenbank-Verfeinerung fehlgeschlagen (Fallback auf reine KI):", dbError);
+                    showToast("Datenbank-Fehler (Offline?)", "error");
+                }
+            } else {
+                showToast("Keine Marke erkannt - Hybrid übersprungen.", "info");
+            }
+            console.groupEnd();
         }
 
         // Datum und Zeitstempel hinzufügen, damit wir die Historie nach Tagen sortieren können
@@ -573,26 +749,81 @@ analyzeBtn.addEventListener('click', async function() {
         jsonResponse.date = currentDate.toISOString().split('T')[0]; // Zum aktuell angezeigten Tag hinzufügen
         jsonResponse.timestamp = now.getTime();
         
+        // Ergebnis anzeigen (ausgelagert in Funktion für Wiederverwendbarkeit)
+        renderAiResult(jsonResponse, usedModelName);
+
+    } catch (error) {
+        console.error(error);
+        
+        let title = "Fehler bei der Analyse";
+        let message = error.message;
+        let icon = "⚠️";
+
+        // Prüfen ob es sich um ein Limit-Problem handelt (429 = Too Many Requests / Quota Exceeded)
+        if (message.includes('429') || message.includes('quota') || message.includes('exhausted')) {
+            title = "Tageslimit erreicht";
+            message = "Die kostenlosen Anfragen für deine API-Keys sind für heute aufgebraucht. Bitte versuche es morgen wieder oder prüfe deine Keys im Profil.";
+            icon = "⏳";
+        }
+
+        resultArea.innerHTML = `
+            <div style="text-align: center; padding: 30px 20px;">
+                <div style="font-size: 48px; margin-bottom: 15px;">${icon}</div>
+                <h3 style="color: #ff453a; margin-bottom: 10px;">${title}</h3>
+                <p style="color: #999; line-height: 1.5;">${message}</p>
+            </div>
+        `;
+        resultArea.classList.remove('hidden');
+        analysisModal.classList.remove('hidden'); // Karte wieder zeigen
+    } finally {
+        hideLoading();
+        console.groupEnd();
+    }
+});
+
+/**
+ * Zeigt das KI-Ergebnis an und aktiviert die Interaktionen (Editieren, Hinzufügen)
+ */
+function renderAiResult(jsonResponse, usedModelName) {
+        // Werte bereinigen (verhindert NaN/undefined Fehler)
+        jsonResponse.calories = parseFloat(jsonResponse.calories) || 0;
+        jsonResponse.protein = parseFloat(jsonResponse.protein) || 0;
+        jsonResponse.fat = parseFloat(jsonResponse.fat) || 0;
+        jsonResponse.carbs = parseFloat(jsonResponse.carbs) || 0;
+        jsonResponse.amount = parseFloat(jsonResponse.amount) || 1;
+        jsonResponse.name = jsonResponse.name || "Unbekanntes Gericht";
+
         // Originalwerte sichern für Skalierung
         const originalCalories = jsonResponse.calories;
         const originalProtein = jsonResponse.protein;
         const originalFat = jsonResponse.fat;
         const originalCarbs = jsonResponse.carbs;
+        const initialAmount = jsonResponse.amount;
+        const displayName = jsonResponse.name;
 
         currentAiResult = jsonResponse; // Speichern für Rezept-Button
 
-        // Initial amount (Standard 1, falls KI nichts gefunden hat)
-        const initialAmount = jsonResponse.amount || 1;
+        // Badge für Datenbank-Verifizierung
+        const verifiedBadge = jsonResponse.isDbVerified ? 
+            `<div style="display: inline-flex; align-items: center; gap: 4px; background: rgba(48, 209, 88, 0.15); color: #30d158; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; margin-bottom: 10px; border: 1px solid rgba(48, 209, 88, 0.3);">
+                <span>✓</span> Datenbank-geprüft
+             </div>` : '';
 
         // Ergebnis anzeigen (Editierbar)
         resultArea.innerHTML = `
-            <h3>${jsonResponse.name}</h3>
+            ${verifiedBadge}
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                <h3 style="margin: 0; flex: 1; line-height: 1.3;">${displayName}</h3>
+                <button id="editProductBtn" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #0a84ff; cursor: pointer; padding: 8px; margin-left: 10px; display: flex; align-items: center; justify-content: center;">
+                    ✎
+                </button>
+            </div>
             
             <div style="background: #1c1c1e; padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #333;">
                 <div style="display: flex; gap: 10px; margin-bottom: 15px;">
                     <div style="flex: 1;">
                         <label style="font-size: 11px; color: #888; display: block; margin-bottom: 5px;">Kcal pro Stk.</label>
-                        <input type="number" id="aiBaseCalories" value="${Math.round(jsonResponse.calories)}" style="width: 100%; background: #000; border: 1px solid #333; padding: 10px; border-radius: 8px; color: #ff5722; font-weight: bold; text-align: center; font-size: 18px;">
+                        <input type="number" id="aiBaseCalories" value="${Math.round(originalCalories)}" style="width: 100%; background: #000; border: 1px solid #333; padding: 10px; border-radius: 8px; color: #ff5722; font-weight: bold; text-align: center; font-size: 18px;">
                     </div>
                     <div style="flex: 1;">
                         <label style="font-size: 11px; color: #888; display: block; margin-bottom: 5px;">Anzahl</label>
@@ -601,10 +832,10 @@ analyzeBtn.addEventListener('click', async function() {
                 </div>
                 
                 <div style="display: flex; justify-content: space-between; font-size: 13px; color: #aaa; padding-top: 10px; border-top: 1px solid #333;">
-                    <span>Gesamt: <strong id="aiTotalDisplay" style="color: white;">${Math.round(jsonResponse.calories * initialAmount)}</strong> kcal</span>
-                    <span>P: <span id="aiProtDisplay">${Math.round(jsonResponse.protein * initialAmount)}</span>g</span>
-                    <span>F: <span id="aiFatDisplay">${Math.round(jsonResponse.fat * initialAmount)}</span>g</span>
-                    <span>K: <span id="aiCarbsDisplay">${Math.round(jsonResponse.carbs * initialAmount)}</span>g</span>
+                    <span>Gesamt: <strong id="aiTotalDisplay" style="color: white;">${Math.round(originalCalories * initialAmount)}</strong> kcal</span>
+                    <span>P: <span id="aiProtDisplay">${Math.round(originalProtein * initialAmount)}</span>g</span>
+                    <span>F: <span id="aiFatDisplay">${Math.round(originalFat * initialAmount)}</span>g</span>
+                    <span>K: <span id="aiCarbsDisplay">${Math.round(originalCarbs * initialAmount)}</span>g</span>
                 </div>
             </div>
 
@@ -701,33 +932,82 @@ analyzeBtn.addEventListener('click', async function() {
             showToast(`"${recipe.name}" gespeichert!`, "success");
         });
 
-    } catch (error) {
-        console.error(error);
-        
-        let title = "Fehler bei der Analyse";
-        let message = error.message;
-        let icon = "⚠️";
+        // Event Listener für Korrektur (Stift-Icon)
+        document.getElementById('editProductBtn').addEventListener('click', async () => {
+            const newName = prompt("Produktname korrigieren (z.B. Marke hinzufügen):", jsonResponse.name);
+            if (!newName || newName === jsonResponse.name) return;
 
-        // Prüfen ob es sich um ein Limit-Problem handelt (429 = Too Many Requests / Quota Exceeded)
-        if (message.includes('429') || message.includes('quota') || message.includes('exhausted')) {
-            title = "Tageslimit erreicht";
-            message = "Die kostenlosen Anfragen für deine API-Keys sind für heute aufgebraucht. Bitte versuche es morgen wieder oder prüfe deine Keys im Profil.";
-            icon = "⏳";
-        }
+            if (!selectedFile) {
+                showToast("Originalbild nicht mehr verfügbar.", "error");
+                return;
+            }
 
-        resultArea.innerHTML = `
-            <div style="text-align: center; padding: 30px 20px;">
-                <div style="font-size: 48px; margin-bottom: 15px;">${icon}</div>
-                <h3 style="color: #ff453a; margin-bottom: 10px;">${title}</h3>
-                <p style="color: #999; line-height: 1.5;">${message}</p>
-            </div>
-        `;
-        resultArea.classList.remove('hidden');
-        analysisModal.classList.remove('hidden'); // Karte wieder zeigen
-    } finally {
-        hideLoading();
-    }
-});
+            showLoading(`Suche "${newName}"...`);
+            try {
+                // 1. Suche in Open Food Facts
+                const offUrl = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(newName)}&search_simple=1&action=process&json=1&page_size=1&fields=product_name,nutriments`;
+                const offRes = await fetch(offUrl);
+                const offData = await offRes.json();
+
+                if (offData.products && offData.products.length > 0) {
+                    const p = offData.products[0];
+                    if (p.nutriments && p.nutriments['energy-kcal_100g']) {
+                        const dbInfo = {
+                            name: p.product_name,
+                            calories_100g: p.nutriments['energy-kcal_100g'],
+                            protein_100g: p.nutriments.proteins_100g || 0,
+                            fat_100g: p.nutriments.fat_100g || 0,
+                            carbs_100g: p.nutriments.carbohydrates_100g || 0
+                        };
+
+                        showLoading("Optimiere mit neuen Werten...");
+                        const base64Data = await compressImage(selectedFile, 800, 0.7);
+                        
+                        // Prompt für die Neuberechnung
+                        const refinePrompt = `
+                            Ich habe das Produkt in der Datenbank gefunden!
+                            Name: ${dbInfo.name}
+                            Echte Nährwerte pro 100g:
+                            - Kalorien: ${dbInfo.calories_100g} kcal
+                            - Protein: ${dbInfo.protein_100g} g
+                            - Fett: ${dbInfo.fat_100g} g
+                            - Kohlenhydrate: ${dbInfo.carbs_100g} g
+
+                            AUFGABE:
+                            1. Schätze anhand des Bildes NUR die Menge (Gewicht in Gramm) der gezeigten Portion.
+                            2. Berechne die TOTALEN Werte für diese Portion basierend auf den 100g-Werten oben.
+                            3. Gib das JSON im exakt gleichen Format wie vorher zurück.
+                            4. Setze 'reasoning' auf: "Manuelle Korrektur: Werte für ${dbInfo.name} aus Datenbank übernommen."
+                        `;
+
+                        // Wir nutzen hier standardmäßig Gemini für die Korrektur
+                        incrementApiUsage(); // Zählt als Aufruf
+                        const genAI = new GoogleGenerativeAI(API_KEY);
+                        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash', generationConfig: { responseMimeType: "application/json" }});
+                        const result = await model.generateContent([refinePrompt, { inlineData: { data: base64Data, mimeType: 'image/jpeg' } }]);
+                        const text = result.response.text();
+                        const refinedJson = safeJsonParse(text);
+
+                        refinedJson.isDbVerified = true;
+                        refinedJson.date = new Date().toISOString().split('T')[0];
+                        refinedJson.timestamp = new Date().getTime();
+
+                        renderAiResult(refinedJson, "Gemini (Korrektur)");
+                        showToast("Produkt korrigiert!", "success");
+                    } else {
+                        showToast("Produkt gefunden, aber keine Nährwerte.", "error");
+                    }
+                } else {
+                    showToast("Produkt nicht in Datenbank gefunden.", "error");
+                }
+            } catch (e) {
+                console.error(e);
+                showToast("Fehler bei der Korrektur.", "error");
+            } finally {
+                hideLoading();
+            }
+        });
+}
 
 // Fehlender Listener für das Schließen des Analyse-Modals
 closeAnalysisBtn.addEventListener('click', () => {
@@ -971,16 +1251,26 @@ closeManualEntryBtn.addEventListener('click', () => {
 productSearchBtn.addEventListener('click', async () => {
     const query = productSearchInput.value.trim();
     if (!query) return;
+    console.log("🔎 MANUAL SEARCH:", query);
 
     productSearchBtn.textContent = "⏳";
     searchResults.innerHTML = '';
     searchResults.style.display = 'block';
 
     try {
-        // Suche in Open Food Facts
-        // Zurück zur V1 API (cgi/search.pl), da diese auch Marken (z.B. Vemondo) findet. V2 sucht nur im Namen.
-        const response = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${query}&search_simple=1&action=process&json=1&page_size=5&fields=product_name,nutriments,image_front_small_url,image_small_url`);
-        const data = await response.json();
+        let data;
+        try {
+            // Versuch 1: Alte API (Bessere Ergebnisse für Marken, aber oft CORS-Probleme)
+            const response = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${query}&search_simple=1&action=process&json=1&page_size=5&fields=product_name,nutriments,image_front_small_url,image_small_url`);
+            data = await response.json();
+            console.log("📦 SEARCH RESULT (V1):", data);
+        } catch (e) {
+            console.warn("Fallback auf API V2 wegen Fehler:", e);
+            // Versuch 2: Neue API V2 (Stabiler, aber manchmal weniger Treffer)
+            const response = await fetch(`https://world.openfoodfacts.org/api/v2/search?search_terms=${query}&page_size=5&fields=product_name,nutriments,image_front_small_url,image_small_url`);
+            data = await response.json();
+            console.log("📦 SEARCH RESULT (V2):", data);
+        }
 
         if (data.products && data.products.length > 0) {
             data.products.forEach(product => {
@@ -1116,6 +1406,7 @@ saveManualEntryBtn.addEventListener('click', () => {
         expanded: false
     };
 
+    console.log("💾 SAVING MANUAL ENTRY:", manualEntry);
     saveToHistory(manualEntry);
     updateUIForDate();
 
@@ -1388,6 +1679,27 @@ function recalculateTotals(entry) {
 
 function toISODateString(date) {
     return date.toISOString().split('T')[0];
+}
+
+/**
+ * Erhöht den API-Nutzungszähler und speichert ihn
+ */
+function incrementApiUsage() {
+    const today = toISODateString(new Date());
+    if (apiUsage.date !== today) {
+        apiUsage = { date: today, count: 0 };
+    }
+    apiUsage.count++;
+    updateApiUsageDisplay();
+    saveUserData().catch(console.error); // Im Hintergrund speichern
+}
+
+function updateApiUsageDisplay() {
+    if (apiUsageDisplay) {
+        apiUsageDisplay.textContent = `Heute: ${apiUsage.count}`;
+        // Warnfarbe ab 15 Anfragen (da Limit oft bei ~20 liegt)
+        apiUsageDisplay.style.color = apiUsage.count >= 15 ? '#ff453a' : '#888';
+    }
 }
 
 /**
@@ -1692,6 +2004,7 @@ async function onScanSuccess(decodedText, decodedResult) {
         // Open Food Facts API abfragen
         const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${decodedText}.json`);
         const data = await response.json();
+    console.log("📦 BARCODE API RESULT:", data);
 
         if (data.status === 1) {
             const p = data.product;
@@ -1773,8 +2086,30 @@ saveBarcodeEntryBtn.addEventListener('click', () => {
         expanded: false
     };
 
+    console.log("💾 SAVING BARCODE ENTRY:", entry);
     saveToHistory(entry);
     renderHistory();
     updateStatsUI();
     barcodeResultModal.classList.add('hidden');
 });
+
+/**
+ * Hilfsfunktion: Sicheres JSON Parsing
+ * Versucht, JSON aus einem Text zu extrahieren, auch wenn Markdown oder Müll drumherum ist.
+ */
+function safeJsonParse(text) {
+    try {
+        let cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+        const firstBrace = cleanText.indexOf('{');
+        const lastBrace = cleanText.lastIndexOf('}');
+        
+        if (firstBrace !== -1 && lastBrace !== -1) {
+            cleanText = cleanText.substring(firstBrace, lastBrace + 1);
+        }
+        return JSON.parse(cleanText);
+    } catch (e) {
+        console.error("JSON Parse Error:", e);
+        console.log("Raw Text:", text);
+        throw new Error("KI-Antwort konnte nicht verarbeitet werden (Ungültiges JSON).");
+    }
+}
