@@ -31,6 +31,7 @@ isSupported().then(supported => {
     if (supported) analytics = getAnalytics(app);
 }).catch(console.error);
 
+const appLoadingScreen = document.getElementById('appLoadingScreen');
 const cameraInput = document.getElementById('cameraInput');
 const imagePreview = document.getElementById('imagePreview');
 const analysisModal = document.getElementById('analysisModal');
@@ -48,9 +49,11 @@ const toggleManualEntryBtn = document.getElementById('toggleManualEntryBtn');
 const manualEntryForm = document.getElementById('manualEntryForm');
 const closeManualEntryBtn = document.getElementById('closeManualEntryBtn');
 const saveManualEntryBtn = document.getElementById('saveManualEntryBtn');
+const saveManualAsRecipeBtn = document.getElementById('saveManualAsRecipeBtn');
 const scanInManualBtn = document.getElementById('scanInManualBtn');
 const productSearchInput = document.getElementById('productSearchInput');
 const productSearchBtn = document.getElementById('productSearchBtn');
+const aiTextEstimateBtn = document.getElementById('aiTextEstimateBtn');
 const searchResults = document.getElementById('searchResults');
 const manualName = document.getElementById('manualName');
 const manualAmount = document.getElementById('manualAmount');
@@ -123,7 +126,7 @@ const bottleContainer = document.querySelector('.bottle-container');
 
 // SVG Icons Definition
 const icons = {
-    fire: `<svg class="icon-svg" viewBox="0 0 24 24" style="color:#ff5722"><path d="M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67zM11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-.36 3.6-1.21 4.62-2.58.39 1.29.59 2.65.59 4.04 0 2.65-2.15 4.8-4.8 4.8z"/></svg>`,
+    fire: `<svg class="icon-svg" viewBox="0 0 24 24" style="color:#bf5af2"><path d="M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67zM11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-.36 3.6-1.21 4.62-2.58.39 1.29.59 2.65.59 4.04 0 2.65-2.15 4.8-4.8 4.8z"/></svg>`,
     protein: `<svg class="icon-svg" viewBox="0 0 24 24" style="color:#3498db"><path d="M20.57 14.86L22 13.43 20.57 12 17 15.57 8.43 7 12 3.43 10.57 2 9.14 3.43 7.71 2 5.57 4.14 4.14 2.71 2.71 4.14l1.43 1.43L2 7.71l1.43 1.43L2 10.57 3.43 12 7 8.43 15.57 17 12 20.57 13.43 22 14.86 20.57 16.29 22 18.43 19.86 19.86 21.29 21.29 19.86 19.86 18.43 22 16.29z"/></svg>`,
     fat: `<svg class="icon-svg" viewBox="0 0 24 24" style="color:#f1c40f"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/><circle cx="12" cy="12" r="5"/></svg>`,
     carbs: `<svg class="icon-svg" viewBox="0 0 24 24" style="color:#2ecc71"><path d="M17 5v12c0 2.76-2.24 5-5 5s-5-2.24-5-5V4c0-1.1.9-2 2-2h1c1.1 0 2 .9 2 2v1h2v-1c0-1.1.9-2 2-2h1c1.1 0 2 .9 2 2z"/></svg>`,
@@ -132,7 +135,7 @@ const icons = {
     trash: `<svg class="icon-svg icon-small" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>`,
     chevron: `<svg class="icon-svg" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17 16.59 8.59 18 10l-6 6-6-6 1.41-1.41z"/></svg>`,
     close: `<svg class="icon-svg icon-small" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>`,
-    water: `<svg class="icon-svg" viewBox="0 0 24 24" style="color:#64d2ff"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>`
+    water: `<svg class="icon-svg" viewBox="0 0 24 24" style="color:#bf5af2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>`
 };
 
 // Globale Variablen für User-Daten
@@ -150,6 +153,45 @@ let currentDate = new Date();
 let html5QrCode = null; // Scanner Instanz
 let currentBarcodeData = null; // Zwischenspeicher für gefundenes Produkt
 let currentManualBase = null; // Zwischenspeicher für manuelle Suche (Basis 100g)
+
+// --- MODAL & HISTORY MANAGEMENT (Zurück-Button Logik) ---
+const openModalsStack = [];
+
+/**
+ * Öffnet ein Modal und fügt es dem Browser-Verlauf hinzu.
+ * Der Zurück-Button schließt es dann wieder.
+ */
+function openModal(modalElement) {
+    if (modalElement.classList.contains('hidden')) {
+        modalElement.classList.remove('hidden');
+        openModalsStack.push(modalElement);
+        // Fügt einen Eintrag in die History hinzu
+        history.pushState({ modalOpen: true, id: modalElement.id }, '');
+    }
+}
+
+/**
+ * Schließt das oberste Modal (simuliert Zurück-Button).
+ * Dies löst das 'popstate' Event aus, welches das Modal tatsächlich schließt.
+ */
+function closeModal() {
+    if (openModalsStack.length > 0) {
+        history.back();
+    }
+}
+
+// Reagiert auf den Browser-Zurück-Button (oder closeModal Aufruf)
+window.addEventListener('popstate', () => {
+    const modal = openModalsStack.pop();
+    if (modal) {
+        modal.classList.add('hidden');
+        
+        // Spezialfall: Scanner stoppen, wenn Scanner-Modal geschlossen wird
+        if (modal.id === 'scannerModal') {
+            stopCamera();
+        }
+    }
+});
 
 // --- AUTHENTIFIZIERUNG LOGIK ---
 
@@ -183,6 +225,10 @@ onAuthStateChanged(auth, async (user) => {
         // Daten laden
         await loadUserData();
         updateUIForDate();
+        
+        // Lade-Screen ausblenden (mit kurzer Verzögerung für Smoothness)
+        setTimeout(() => appLoadingScreen.classList.add('fade-out-screen'), 300);
+        
     } else {
         // User ist ausgeloggt
         currentUser = null;
@@ -190,6 +236,9 @@ onAuthStateChanged(auth, async (user) => {
         authScreen.classList.remove('hidden');
         appContent.classList.add('hidden');
         calorieHistory = { entries: [] };
+        
+        // Auch hier Lade-Screen wegnehmen, damit man sich einloggen kann
+        setTimeout(() => appLoadingScreen.classList.add('fade-out-screen'), 300);
     }
 });
 
@@ -267,7 +316,7 @@ registerBtn.addEventListener('click', async () => {
 logoutBtn.addEventListener('click', () => {
     signOut(auth);
     localStorage.removeItem('app_encryption_key'); // Schlüssel aus Sicherheit entfernen
-    profileModal.classList.add('hidden');
+    closeModal(); // Profil schließen
 });
 
 // --- PROFIL & DATEN LOGIK ---
@@ -324,11 +373,8 @@ async function loadUserData() {
     }
 }
 
-async function saveUserData() {
+async function saveUserData(saveKeys = false) {
     if (!currentUser) return;
-    
-    const encryptedGemini = await encryptText(API_KEY);
-    const encryptedOpenAI = await encryptText(OPENAI_API_KEY);
 
     // Ziele aus Inputs lesen
     const newGoals = {
@@ -348,21 +394,26 @@ async function saveUserData() {
         activity: profileActivity.value
     };
 
-    // Speichert ALLES (Keys + History) in Firebase
-    await setDoc(doc(db, "users", currentUser.uid), {
-        geminiKey: encryptedGemini,
-        openaiKey: encryptedOpenAI,
+    const dataToSave = {
         history: calorieHistory,
         goals: newGoals,
         profileData: profileData,
         recipes: userRecipes,
         apiUsage: apiUsage
-    }, { merge: true });
+    };
+
+    // Keys nur speichern, wenn explizit angefordert (verhindert Überschreiben durch Auto-Save)
+    if (saveKeys) {
+        dataToSave.geminiKey = await encryptText(API_KEY);
+        dataToSave.openaiKey = await encryptText(OPENAI_API_KEY);
+    }
+
+    await setDoc(doc(db, "users", currentUser.uid), dataToSave, { merge: true });
 }
 
 // Profil UI Events
-openProfileBtn.addEventListener('click', () => profileModal.classList.remove('hidden'));
-closeProfileBtn.addEventListener('click', () => profileModal.classList.add('hidden'));
+openProfileBtn.addEventListener('click', () => openModal(profileModal));
+closeProfileBtn.addEventListener('click', () => closeModal());
 
 saveProfileBtn.addEventListener('click', async () => {
     API_KEY = profileGeminiKey.value.trim();
@@ -377,10 +428,10 @@ saveProfileBtn.addEventListener('click', async () => {
         water: Math.round(parseFloat(goalInputs.w.value)) || 2500
     };
 
-    await saveUserData();
+    await saveUserData(true); // WICHTIG: Hier true übergeben, damit Keys gespeichert werden
     updateStatsUI(); // UI sofort aktualisieren
     showToast("Profil gespeichert!", "success");
-    profileModal.classList.add('hidden');
+    closeModal(); // Profil schließen
 });
 
 // Automatische Berechnung (Mifflin-St Jeor Formel)
@@ -445,7 +496,7 @@ cameraInput.addEventListener('change', function(event) {
         reader.onload = function(e) {
             imagePreview.src = e.target.result;
             // Neue Logik: Karte anzeigen statt nur Bild
-            analysisModal.classList.remove('hidden');
+            openModal(analysisModal);
         }
         
         reader.readAsDataURL(file);
@@ -478,9 +529,9 @@ analyzeBtn.addEventListener('click', async function() {
 
     if (!API_KEY) {
         showToast("Bitte API Key im Profil hinterlegen!", "error");
-        profileModal.classList.remove('hidden');
+        openModal(profileModal);
         hideLoading();
-        analysisModal.classList.remove('hidden'); // Karte wieder zeigen bei Fehler
+        // analysisModal wieder öffnen? War ja gerade zu.
         console.groupEnd();
         return;
     }
@@ -607,7 +658,7 @@ analyzeBtn.addEventListener('click', async function() {
             `;
             resultArea.classList.remove('hidden');
             hideLoading();
-            analysisModal.classList.remove('hidden'); // Karte wieder zeigen damit man es nochmal versuchen kann
+            openModal(analysisModal); // Karte wieder zeigen damit man es nochmal versuchen kann
             console.groupEnd();
             return;
         }
@@ -774,7 +825,7 @@ analyzeBtn.addEventListener('click', async function() {
             </div>
         `;
         resultArea.classList.remove('hidden');
-        analysisModal.classList.remove('hidden'); // Karte wieder zeigen
+        openModal(analysisModal); // Karte wieder zeigen
     } finally {
         hideLoading();
         console.groupEnd();
@@ -814,7 +865,7 @@ function renderAiResult(jsonResponse, usedModelName) {
             ${verifiedBadge}
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
                 <h3 style="margin: 0; flex: 1; line-height: 1.3;">${displayName}</h3>
-                <button id="editProductBtn" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #0a84ff; cursor: pointer; padding: 8px; margin-left: 10px; display: flex; align-items: center; justify-content: center;">
+                <button id="editProductBtn" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #bf5af2; cursor: pointer; padding: 8px; margin-left: 10px; display: flex; align-items: center; justify-content: center;">
                     ✎
                 </button>
             </div>
@@ -823,7 +874,7 @@ function renderAiResult(jsonResponse, usedModelName) {
                 <div style="display: flex; gap: 10px; margin-bottom: 15px;">
                     <div style="flex: 1;">
                         <label style="font-size: 11px; color: #888; display: block; margin-bottom: 5px;">Kcal pro Stk.</label>
-                        <input type="number" id="aiBaseCalories" value="${Math.round(originalCalories)}" style="width: 100%; background: #000; border: 1px solid #333; padding: 10px; border-radius: 8px; color: #ff5722; font-weight: bold; text-align: center; font-size: 18px;">
+                        <input type="number" id="aiBaseCalories" value="${Math.round(originalCalories)}" style="width: 100%; background: #000; border: 1px solid #333; padding: 10px; border-radius: 8px; color: #bf5af2; font-weight: bold; text-align: center; font-size: 18px;">
                     </div>
                     <div style="flex: 1;">
                         <label style="font-size: 11px; color: #888; display: block; margin-bottom: 5px;">Anzahl</label>
@@ -1011,7 +1062,7 @@ function renderAiResult(jsonResponse, usedModelName) {
 
 // Fehlender Listener für das Schließen des Analyse-Modals
 closeAnalysisBtn.addEventListener('click', () => {
-    analysisModal.classList.add('hidden');
+    closeModal();
 });
 
 /**
@@ -1085,7 +1136,7 @@ function updateStatsUI() {
     };
 
     dailyStats.innerHTML = `
-        ${createChart(currentCal, goalCal, '#ff5722', 'Kcal', 'xlarge')}
+        ${createChart(currentCal, goalCal, '#bf5af2', 'Kcal', 'xlarge')}
         <div class="macro-row">
             ${createChart(currentP, goalP, '#3498db', 'Protein')}
             ${createChart(currentF, goalF, '#f1c40f', 'Fett')}
@@ -1240,11 +1291,11 @@ nextDayBtn.addEventListener('click', () => {
 });
 
 toggleManualEntryBtn.addEventListener('click', () => {
-    manualEntryForm.classList.toggle('hidden');
+    openModal(manualEntryForm);
 });
 
 closeManualEntryBtn.addEventListener('click', () => {
-    manualEntryForm.classList.add('hidden');
+    closeModal();
 });
 
 // --- PRODUKTSUCHE LOGIK ---
@@ -1253,7 +1304,11 @@ productSearchBtn.addEventListener('click', async () => {
     if (!query) return;
     console.log("🔎 MANUAL SEARCH:", query);
 
-    productSearchBtn.textContent = "⏳";
+    // Original-Inhalt sichern und Lade-Animation anzeigen
+    const originalBtnContent = productSearchBtn.innerHTML;
+    productSearchBtn.innerHTML = `<svg class="icon-svg spin-anim" viewBox="0 0 24 24"><path d="M6 2v6h.01L6 8.01 10 12l-4 4 .01.01H6V22h12v-5.99h-.01L18 16l-4-4 4-3.99-.01-.01H18V2H6zm10 14.5V20H8v-3.5l4-4 4 4z"/></svg>`;
+    productSearchBtn.disabled = true; // Mehrfachklicks verhindern
+    
     searchResults.innerHTML = '';
     searchResults.style.display = 'block';
 
@@ -1321,7 +1376,72 @@ productSearchBtn.addEventListener('click', async () => {
         console.error(e);
         searchResults.innerHTML = '<div class="search-result-item" style="color: #ff453a;">Fehler bei der Suche.</div>';
     } finally {
-        productSearchBtn.textContent = "Go";
+        // Button wiederherstellen
+        productSearchBtn.innerHTML = originalBtnContent;
+        productSearchBtn.disabled = false;
+    }
+});
+
+// --- NEU: AI TEXT SCHÄTZUNG ---
+aiTextEstimateBtn.addEventListener('click', async () => {
+    const query = productSearchInput.value.trim();
+    if (!query) return showToast("Bitte ein Gericht eingeben.", "error");
+    
+    if (!API_KEY) return showToast("API Key fehlt (siehe Profil).", "error");
+
+    showLoading("KI schätzt Portion & Werte...");
+    
+    try {
+        const genAI = new GoogleGenerativeAI(API_KEY);
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash', generationConfig: { responseMimeType: "application/json" }});
+        
+        const prompt = `
+            Du bist ein Ernährungsberater. Schätze die Nährwerte für: "${query}".
+            1. Gehe von einer realistischen Standardportion aus (z.B. ganzer Döner = 350g, 1 Apfel = 150g).
+            2. Berücksichtige Modifikationen im Text genau (z.B. "ohne Soße" -> weniger Kalorien/Fett).
+            
+            Antworte mit JSON:
+            {
+                "name": "Kurzer Name des Gerichts",
+                "weight": 350, // Geschätztes Gewicht der Portion in Gramm
+                "calories": 700, // Gesamtkalorien für dieses Gewicht
+                "protein": 30,
+                "fat": 20,
+                "carbs": 80
+            }
+        `;
+        
+        const result = await model.generateContent(prompt);
+        const json = safeJsonParse(result.response.text());
+        
+        // Formular füllen
+        manualName.value = json.name;
+        manualAmount.value = json.weight;
+        manualUnit.value = 'g';
+        
+        // Basis für Neuberechnung setzen (auf 100g normieren, damit Änderung der Menge funktioniert)
+        const factor = (json.weight || 100) / 100;
+        currentManualBase = {
+            calories: json.calories / factor,
+            protein: json.protein / factor,
+            fat: json.fat / factor,
+            carbs: json.carbs / factor
+        };
+        
+        // Felder setzen
+        manualCalories.value = Math.round(json.calories);
+        manualProtein.value = Math.round(json.protein);
+        manualFat.value = Math.round(json.fat);
+        manualCarbs.value = Math.round(json.carbs);
+        
+        searchResults.style.display = 'none'; // Suchergebnisse ausblenden falls offen
+        showToast("Werte geschätzt!", "success");
+        
+    } catch (e) {
+        console.error(e);
+        showToast("Fehler bei der KI-Schätzung.", "error");
+    } finally {
+        hideLoading();
     }
 });
 
@@ -1364,8 +1484,8 @@ function updateManualMacros() {
 }
 
 scanInManualBtn.addEventListener('click', () => {
-    manualEntryForm.classList.add('hidden');
-    scannerModal.classList.remove('hidden');
+    // Wir schließen das manuelle Formular nicht zwingend, wir legen den Scanner drüber (Stack)
+    openModal(scannerModal);
     startCamera();
 });
 
@@ -1419,17 +1539,44 @@ saveManualEntryBtn.addEventListener('click', () => {
     manualFat.value = '';
     manualCarbs.value = '';
     currentManualBase = null; // Reset
-    manualEntryForm.classList.add('hidden');
+    closeModal(); // Schließt das manuelle Formular
+});
+
+// --- NEU: MANUELLEN EINTRAG ALS REZEPT SPEICHERN ---
+saveManualAsRecipeBtn.addEventListener('click', () => {
+    const name = manualName.value.trim();
+    const calories = parseFloat(manualCalories.value) || 0;
+    const protein = parseFloat(manualProtein.value) || 0;
+    const fat = parseFloat(manualFat.value) || 0;
+    const carbs = parseFloat(manualCarbs.value) || 0;
+
+    if (!name || calories <= 0) {
+        showToast("Bitte Name und Kalorien angeben.", "error");
+        return;
+    }
+
+    const newRecipe = {
+        id: Date.now().toString(),
+        name: name,
+        calories: calories,
+        protein: protein,
+        fat: fat,
+        carbs: carbs
+    };
+
+    userRecipes.push(newRecipe);
+    saveUserData();
+    showToast(`"${name}" als Rezept gespeichert!`, "success");
 });
 
 // --- REZEPTE LOGIK ---
 
 recipesBtn.addEventListener('click', () => {
     renderRecipes();
-    recipesModal.classList.remove('hidden');
+    openModal(recipesModal);
 });
 
-closeRecipesBtn.addEventListener('click', () => recipesModal.classList.add('hidden'));
+closeRecipesBtn.addEventListener('click', () => closeModal());
 
 createNewRecipeBtn.addEventListener('click', () => {
     // Felder leeren
@@ -1438,10 +1585,10 @@ createNewRecipeBtn.addEventListener('click', () => {
     recipeInputs.p.value = '';
     recipeInputs.f.value = '';
     recipeInputs.c.value = '';
-    createRecipeModal.classList.remove('hidden');
+    openModal(createRecipeModal);
 });
 
-closeCreateRecipeBtn.addEventListener('click', () => createRecipeModal.classList.add('hidden'));
+closeCreateRecipeBtn.addEventListener('click', () => closeModal());
 
 saveNewRecipeBtn.addEventListener('click', () => {
     const name = recipeInputs.name.value.trim();
@@ -1459,7 +1606,7 @@ saveNewRecipeBtn.addEventListener('click', () => {
     userRecipes.push(newRecipe);
     saveUserData();
     renderRecipes();
-    createRecipeModal.classList.add('hidden');
+    closeModal(); // Schließt createRecipeModal
 });
 
 function renderRecipes() {
@@ -1485,11 +1632,10 @@ function renderRecipes() {
             if (e.target.closest('.delete-btn')) {
                 // Löschen
                 e.stopPropagation();
-                if(confirm(`Rezept "${recipe.name}" wirklich löschen?`)) {
-                    userRecipes.splice(index, 1);
-                    saveUserData();
-                    renderRecipes();
-                }
+                userRecipes.splice(index, 1);
+                saveUserData();
+                renderRecipes();
+                showToast(`Rezept "${recipe.name}" gelöscht`, "info");
                 return;
             }
             // Hinzufügen Logik (als manueller Eintrag)
@@ -1522,7 +1668,7 @@ function addRecipeToDay(recipe) {
     };
     saveToHistory(entry);
     updateUIForDate();
-    recipesModal.classList.add('hidden');
+    closeModal(); // Schließt recipesModal
     showToast(`"${recipe.name}" hinzugefügt!`, "success");
 }
 
@@ -1956,7 +2102,7 @@ if ('serviceWorker' in navigator) {
 
 closeScannerBtn.addEventListener('click', () => {
     stopCamera();
-    scannerModal.classList.add('hidden');
+    closeModal();
 });
 
 function startCamera() {
@@ -1978,7 +2124,7 @@ function startCamera() {
     .catch(err => {
         console.error("Kamera Fehler:", err);
         showToast("Kamera-Fehler: Berechtigung prüfen.", "error");
-        scannerModal.classList.add('hidden');
+        closeModal();
     });
 }
 
@@ -1997,7 +2143,7 @@ function onScanFailure(error) {
 async function onScanSuccess(decodedText, decodedResult) {
     // Scan stoppen
     stopCamera();
-    scannerModal.classList.add('hidden');
+    closeModal(); // Scanner schließen
     showLoading("Suche Produkt...");
 
     try {
@@ -2035,7 +2181,7 @@ function showBarcodeResultModal() {
     barcode100gInfo.textContent = `${Math.round(currentBarcodeData.calories100)} kcal / 100g`;
     barcodeWeight.value = 100; // Reset auf 100g
     updateBarcodeStats(); // Initiale Berechnung
-    barcodeResultModal.classList.remove('hidden');
+    openModal(barcodeResultModal);
 }
 
 function updateBarcodeStats() {
@@ -2059,7 +2205,7 @@ function updateBarcodeStats() {
 
 barcodeWeight.addEventListener('input', updateBarcodeStats);
 
-closeBarcodeResultBtn.addEventListener('click', () => barcodeResultModal.classList.add('hidden'));
+closeBarcodeResultBtn.addEventListener('click', () => closeModal());
 
 saveBarcodeEntryBtn.addEventListener('click', () => {
     const weight = parseFloat(barcodeWeight.value) || 0;
@@ -2090,7 +2236,7 @@ saveBarcodeEntryBtn.addEventListener('click', () => {
     saveToHistory(entry);
     renderHistory();
     updateStatsUI();
-    barcodeResultModal.classList.add('hidden');
+    closeModal();
 });
 
 /**

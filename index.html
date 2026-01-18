@@ -13,6 +13,22 @@
 </head>
 <body>
     <div class="app-container">
+        <!-- Globaler Gradient für SVGs -->
+        <svg width="0" height="0" style="position: absolute;">
+            <defs>
+                <linearGradient id="brandGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#0a84ff" />
+                    <stop offset="100%" stop-color="#bf5af2" />
+                </linearGradient>
+            </defs>
+        </svg>
+
+        <!-- Initialer Lade-Screen (Verdeckt alles beim Start) -->
+        <div id="appLoadingScreen" class="loading-overlay" style="z-index: 9999; background: #000;">
+            <div class="spinner"></div>
+            <p style="margin-top: 20px; color: #666; font-size: 14px; letter-spacing: 1px;">NUTRISCAN AI</p>
+        </div>
+
         <!-- Login Screen -->
         <div id="auth-screen" class="auth-container">
             <div class="auth-box">
@@ -77,34 +93,39 @@
                 <button id="toggleManualEntryBtn" class="secondary-btn">Snack hinzufügen +</button>
                 <div id="manualEntryForm" class="manual-entry-box hidden">
                     <div class="manual-entry-header">
-                        <h3>Snack erfassen</h3>
+                        <h3>Eintrag hinzufügen</h3>
                         <button id="closeManualEntryBtn" class="close-modal-btn">
                             <svg class="icon-svg" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
                         </button>
                     </div>
                     
-                    <button id="scanInManualBtn" class="secondary-btn" style="margin-bottom: 15px; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                        <svg class="icon-svg" viewBox="0 0 24 24"><path d="M3 5h2V3c-1.1 0-2 .9-2 2zm0 8h2v-2H3v2zm4 8h2v-2H7v2zM3 9h2V7H3v2zm10-6h-2v2h2V3zm6 0v2h2c0-1.1-.9-2-2-2zM5 21v-2H3c0 1.1.9 2 2 2zm-2-4h2v-2H3v2zM9 3H7v2h2V3zm8 0h-2v2h2V3zm2 8h2v-2h-2v2zm0-4h2V5h-2v2zm0 12h2c0 1.1-.9 2-2 2v-2zm0-4h2v-2h-2v2zm-4 4h-2v2h2v-2zm0-4h-2v2h2v-2zm-4 4H7v2h2v-2zm-4-4H7v2h2v-2z"/></svg>
-                        Barcode scannen
-                    </button>
-
-                    <!-- Suche -->
+                    <!-- Universal Suche -->
                     <div class="search-container">
-                        <div class="search-input-group">
-                            <span class="search-icon">
+                        <input type="text" id="productSearchInput" class="main-search-input" placeholder="Produkt suchen oder beschreiben...">
+                        
+                        <div class="search-toolbar">
+                            <button id="productSearchBtn" class="toolbar-btn db-btn">
                                 <svg class="icon-svg" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-                            </span>
-                            <input type="text" id="productSearchInput" placeholder="Datenbank durchsuchen...">
-                            <button id="productSearchBtn" class="search-go-btn">Go</button>
+                                Datenbank
+                            </button>
+                            <button id="aiTextEstimateBtn" class="toolbar-btn ai-btn">
+                                <svg class="icon-svg" viewBox="0 0 24 24"><path d="M19 9l1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5zM19 15l-1.25 2.75L15 19l2.75 1.25L19 23l1.25-2.75L23 19l-2.75-1.25L19 15z"/></svg>
+                                KI Schätzung
+                            </button>
+                            <button id="scanInManualBtn" class="toolbar-btn scan-btn">
+                                <svg class="icon-svg" viewBox="0 0 24 24"><path d="M3 5h2V3c-1.1 0-2 .9-2 2zm0 8h2v-2H3v2zm4 8h2v-2H7v2zM3 9h2V7H3v2zm10-6h-2v2h2V3zm6 0v2h2c0-1.1-.9-2-2-2zM5 21v-2H3c0 1.1.9 2 2 2zm-2-4h2v-2H3v2zM9 3H7v2h2V3zm8 0h-2v2h2V3zm2 8h2v-2h-2v2zm0-4h2V5h-2v2zm0 12h2c0 1.1-.9 2-2 2v-2zm0-4h2v-2h-2v2zm-4 4h-2v2h2v-2zm0-4h-2v2h2v-2zm-4 4H7v2h2v-2z"/></svg>
+                                Barcode
+                            </button>
                         </div>
+                        
+                        <div style="font-size: 10px; color: #666; text-align: center; margin-bottom: 15px; margin-top: -10px;">
+                            ⚠️ KI-Werte sind Schätzungen. Bitte auf Plausibilität prüfen.
+                        </div>
+                        
                         <div id="searchResults" class="search-results"></div>
                     </div>
 
-                    <div class="form-divider">
-                        <span>oder manuell</span>
-                    </div>
-
-                    <!-- Manuelle Eingabe -->
+                    <!-- Details / Manuelle Eingabe -->
                     <div class="manual-form-grid">
                         <div class="form-group full-width">
                             <label>Name</label>
@@ -149,7 +170,12 @@
                         </div>
                     </div>
 
-                    <button id="saveManualEntryBtn" class="primary-btn" style="margin-top: 20px;">Eintrag speichern</button>
+                    <div style="display: flex; gap: 10px; margin-top: 20px;">
+                        <button id="saveManualEntryBtn" class="primary-btn" style="flex: 1;">Hinzufügen</button>
+                        <button id="saveManualAsRecipeBtn" class="secondary-btn" style="flex: 0 0 60px; border-color: #9c27b0; color: #e1bee7; display: flex; align-items: center; justify-content: center;" title="Als Rezept speichern">
+                            <svg class="icon-svg" viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z"/></svg>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -164,7 +190,7 @@
                 <div class="profile-section">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                         <h4 class="section-title" style="margin: 0;">Dein Ziel & Körper</h4>
-                        <svg id="infoIconBtn" class="icon-svg" viewBox="0 0 24 24" style="color: #0a84ff; cursor: pointer; width: 20px; height: 20px;">
+                        <svg id="infoIconBtn" class="icon-svg" viewBox="0 0 24 24" style="color: #bf5af2; cursor: pointer; width: 20px; height: 20px;">
                             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
                         </svg>
                     </div>
@@ -243,7 +269,9 @@
             <div class="action-grid">
                 <!-- AI Scan Kachel -->
                 <label for="cameraInput" class="action-card ai-card">
-                    <div class="card-icon">✨</div>
+                    <div class="card-icon">
+                        <svg class="icon-svg" style="width: 32px; height: 32px;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
+                    </div>
                     <span class="card-title">AI Foto Scan</span>
                     <span class="card-desc">Erkennt dein Essen automatisch</span>
                     <input type="file" id="cameraInput" accept="image/*" capture="environment">
@@ -251,7 +279,9 @@
                 
                 <!-- Rezepte Kachel -->
                 <button id="recipesBtn" class="action-card recipe-card">
-                    <div class="card-icon">📖</div>
+                    <div class="card-icon">
+                        <svg class="icon-svg" style="width: 32px; height: 32px;" viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z"/></svg>
+                    </div>
                     <span class="card-title">Rezepte</span>
                     <span class="card-desc">Deine Sammlung & Vorlagen</span>
                 </button>
@@ -279,7 +309,7 @@
                     <div style="flex: 1;">
                         <div style="display: flex; align-items: center; gap: 6px;">
                             <div style="font-weight: 600; font-size: 14px;">Marken-Scan (Hybrid)</div>
-                            <svg id="hybridInfoBtn" class="icon-svg" viewBox="0 0 24 24" style="width: 16px; height: 16px; color: #0a84ff; cursor: pointer; opacity: 0.8;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                            <svg id="hybridInfoBtn" class="icon-svg" viewBox="0 0 24 24" style="width: 16px; height: 16px; color: #bf5af2; cursor: pointer; opacity: 0.8;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
                         </div>
                         <div style="font-size: 11px; color: #888;">Für verpackte Produkte (Datenbank-Check)</div>
                     </div>
@@ -292,7 +322,7 @@
                         1. Die KI sucht nach Marken/Produkten (z.B. "Barilla Pesto").<br>
                         2. App lädt <strong>echte Nährwerte</strong> aus der Datenbank.<br>
                         3. KI berechnet damit die exakte Menge.<br>
-                        <em style="color: #0a84ff; display: block; margin-top: 5px;">Ideal für Supermarkt-Produkte, nicht für Selbstgekochtes.</em>
+                        <em style="color: #bf5af2; display: block; margin-top: 5px;">Ideal für Supermarkt-Produkte, nicht für Selbstgekochtes.</em>
                         <br>
                         <span style="color: #ff453a; display: block; margin-top: 8px; font-weight: bold;">⚠️ Hinweis: Verbraucht 2 API-Anfragen! (Google Free Tier hat ca. 20 Anfragen/Tag).</span>
                     </p>
@@ -346,6 +376,18 @@
                 <button id="closeScannerBtn" class="close-modal-btn" style="background: rgba(0,0,0,0.5); border-radius: 50%; width: 40px; height: 40px;">X</button>
             </div>
             <div id="reader" style="width: 100%; height: 100%; object-fit: cover;"></div>
+            
+            <!-- Visuelles Feedback Overlay -->
+            <div class="scanner-overlay">
+                <div class="scanner-box">
+                    <div class="scanner-corner top-left"></div>
+                    <div class="scanner-corner top-right"></div>
+                    <div class="scanner-corner bottom-left"></div>
+                    <div class="scanner-corner bottom-right"></div>
+                    <div class="scanner-line"></div>
+                </div>
+                <p style="margin-top: 30px; color: white; background: rgba(0,0,0,0.5); padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 500; backdrop-filter: blur(5px);">Barcode im Rahmen platzieren</p>
+            </div>
         </div>
 
         <!-- Barcode Ergebnis Modal -->

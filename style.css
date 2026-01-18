@@ -18,7 +18,7 @@ body {
     justify-content: center;
     min-height: 100vh;
     /* Subtiler Hintergrund-Schein für Atmosphäre */
-    background-image: radial-gradient(circle at 50% 0%, #1a1a2e 0%, #000000 60%);
+    background-image: radial-gradient(circle at 50% 0%, #2d1b4e 0%, #000000 60%);
     /* Verhindert "Gummiband"-Effekt beim Scrollen (Native App Feel) */
     overscroll-behavior-y: none;
     /* Safe Areas für iPhone X+ (Notch & Home Bar) */
@@ -103,7 +103,7 @@ body {
 
 .auth-box input:focus {
     outline: none;
-    border-color: #fff;
+    border-color: #bf5af2;
     background: rgba(0, 0, 0, 0.4);
     transform: translateY(-2px);
     box-shadow: 0 10px 20px rgba(0,0,0,0.2);
@@ -213,7 +213,7 @@ input[type="text"] {
 
 input[type="text"]:focus {
     outline: none;
-    border-color: #333;
+    border-color: #bf5af2;
     background: #111;
     box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
 }
@@ -246,10 +246,13 @@ input[type="file"] {
     min-height: 140px;
     position: relative;
     overflow: hidden;
+    color: white; /* Fix: SVG Icons erben diese Farbe (weiß statt schwarz) */
 }
 
 .action-card:active {
     transform: scale(0.96);
+    filter: brightness(1.2); /* Visuelles Feedback beim Klicken */
+    border-color: #fff;
 }
 
 .ai-card {
@@ -431,9 +434,9 @@ input[type="file"] {
     left: 0;
     width: 100%;
     height: 0%; /* Wird per JS gesteuert */
-    background: #0a84ff;
+    background: linear-gradient(to top, #0a84ff, #bf5af2);
     transition: height 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 0 20px rgba(10, 132, 255, 0.5);
+    box-shadow: 0 0 20px rgba(191, 90, 242, 0.5);
 }
 
 /* Wellen-Animation (Pseudo-Elemente) */
@@ -565,7 +568,7 @@ input[type="file"] {
 
 .manual-entry-box input:focus {
     background: rgba(0, 0, 0, 0.5);
-    border-color: #0a84ff;
+    border-color: #bf5af2;
     outline: none;
     transform: translateY(-1px);
 }
@@ -575,28 +578,68 @@ input[type="file"] {
     margin-bottom: 15px;
 }
 
-.search-input-group {
-    display: flex;
-    align-items: center;
-    background: rgba(0,0,0,0.3);
+.main-search-input {
+    width: 100%;
+    padding: 16px;
+    font-size: 16px;
+    background: rgba(255,255,255,0.05);
     border: 1px solid rgba(255,255,255,0.1);
     border-radius: 12px;
-    padding: 5px;
+    color: white;
+    margin-bottom: 12px;
+    box-sizing: border-box;
 }
 
-.search-icon {
-    padding: 0 10px;
-    font-size: 14px;
-    color: #666;
+.main-search-input:focus {
+    background: rgba(255,255,255,0.1);
+    border-color: #bf5af2;
+    outline: none;
 }
 
-.search-input-group input {
-    border: none !important;
-    background: transparent !important;
-    padding: 10px 0 !important;
-    margin: 0 !important;
-    flex: 1;
-    box-shadow: none !important;
+.search-toolbar {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.toolbar-btn {
+    padding: 10px 5px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.1);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    transition: transform 0.1s;
+}
+
+.toolbar-btn:active {
+    transform: scale(0.96);
+}
+
+.db-btn {
+    background: rgba(255,255,255,0.05);
+    color: #ccc;
+}
+
+.ai-btn {
+    background: linear-gradient(135deg, #0a84ff, #bf5af2);
+    color: white;
+    border: none;
+}
+
+.scan-btn {
+    background: rgba(255,255,255,0.05);
+    color: #ccc;
+}
+
+/* Alte Styles entfernen/überschreiben falls nötig */
+.search-input-group, .search-icon, .search-go-btn, .form-divider {
+    display: none;
 }
 
 .amount-row {
@@ -649,38 +692,6 @@ input[type="file"] {
 .quick-amt-btn:active {
     background: rgba(255,255,255,0.2);
     transform: scale(0.95);
-}
-
-.search-go-btn {
-    background: #333;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    padding: 8px 15px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-}
-
-.form-divider {
-    display: flex;
-    align-items: center;
-    text-align: center;
-    margin: 20px 0;
-    color: #555;
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.form-divider::before, .form-divider::after {
-    content: '';
-    flex: 1;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-}
-
-.form-divider span {
-    padding: 0 10px;
 }
 
 .manual-form-grid {
@@ -768,17 +779,21 @@ input[type="file"] {
     gap: 10px;
 }
 
-.macro-input.calories { border-color: rgba(255, 87, 34, 0.3); }
-.macro-input.calories input { color: #ff5722; }
+.macro-input.calories { border-color: rgba(191, 90, 242, 0.3); }
+.macro-input.calories input { color: #bf5af2; }
+.macro-input.calories label { color: #bf5af2; }
 
 .macro-input.protein { border-color: rgba(52, 152, 219, 0.3); }
 .macro-input.protein input { color: #3498db; }
+.macro-input.protein label { color: #3498db; }
 
 .macro-input.fat { border-color: rgba(241, 196, 15, 0.3); }
 .macro-input.fat input { color: #f1c40f; }
+.macro-input.fat label { color: #f1c40f; }
 
 .macro-input.carbs { border-color: rgba(46, 204, 113, 0.3); }
 .macro-input.carbs input { color: #2ecc71; }
+.macro-input.carbs label { color: #2ecc71; }
 
 .styled-select {
     width: 100%;
@@ -816,7 +831,7 @@ input[type="file"] {
 }
 
 .primary-btn {
-    background: #0a84ff;
+    background: linear-gradient(135deg, #0a84ff, #bf5af2);
     color: white;
     border: none;
     padding: 15px;
@@ -1120,9 +1135,10 @@ h3 {
 }
 
 .spinner::after {
-    border-bottom-color: #30d158;
-    border-left-color: #30d158;
+    border-bottom-color: #bf5af2; /* Lila (passend zu Rezepten) */
+    border-left-color: #bf5af2;
     animation: spin 1.5s linear infinite reverse;
+    box-shadow: 0 0 15px rgba(191, 90, 242, 0.5); /* Lila Glow */
 }
 
 @keyframes spin {
@@ -1243,7 +1259,7 @@ h3 {
 
 .toast.success { border-left: 4px solid #30d158; }
 .toast.error { border-left: 4px solid #ff453a; }
-.toast.info { border-left: 4px solid #0a84ff; }
+.toast.info { border-left: 4px solid #bf5af2; }
 
 .toast.fade-out {
     animation: toastFadeOut 0.3s forwards;
@@ -1298,5 +1314,69 @@ h3 {
     border-radius: 50%;
 }
 
-input:checked + .slider { background-color: #0a84ff; }
+input:checked + .slider { background-color: #bf5af2; }
 input:checked + .slider:before { transform: translateX(20px); }
+
+/* --- SCANNER OVERLAY STYLES --- */
+.scanner-overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; /* Klicks gehen durch (wichtig für Fokus etc.) */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 5;
+}
+
+.scanner-box {
+    width: 260px;
+    height: 260px;
+    position: relative;
+    box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.6); /* Dunkelt den Bereich außerhalb ab */
+    border-radius: 20px;
+}
+
+.scanner-corner {
+    position: absolute;
+    width: 40px; height: 40px;
+    border-color: #bf5af2;
+    border-style: solid;
+    border-width: 4px;
+    border-radius: 4px;
+    box-shadow: 0 0 10px rgba(191, 90, 242, 0.5);
+}
+
+.top-left { top: 0; left: 0; border-right: none; border-bottom: none; border-top-left-radius: 20px; }
+.top-right { top: 0; right: 0; border-left: none; border-bottom: none; border-top-right-radius: 20px; }
+.bottom-left { bottom: 0; left: 0; border-right: none; border-top: none; border-bottom-left-radius: 20px; }
+.bottom-right { bottom: 0; right: 0; border-left: none; border-top: none; border-bottom-right-radius: 20px; }
+
+.scanner-line {
+    width: 100%;
+    height: 2px;
+    background: #bf5af2;
+    position: absolute;
+    top: 50%;
+    box-shadow: 0 0 15px #bf5af2;
+    animation: scan-move 2s infinite ease-in-out;
+    opacity: 0.8;
+}
+
+@keyframes scan-move {
+    0% { top: 10%; opacity: 0; }
+    50% { opacity: 1; }
+    100% { top: 90%; opacity: 0; }
+}
+
+/* Rotations-Animation für Lade-Icons */
+.spin-anim {
+    animation: spin 1s linear infinite;
+}
+
+/* Fade Out Animation für den Lade-Screen */
+.fade-out-screen {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease-out;
+}
