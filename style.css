@@ -1112,36 +1112,6 @@ h3 {
     letter-spacing: 0.5px;
 }
 
-.spinner {
-    width: 60px;
-    height: 60px;
-    position: relative;
-    margin-bottom: 20px;
-}
-
-.spinner::before, .spinner::after {
-    content: "";
-    position: absolute;
-    border-radius: 50%;
-    inset: 0;
-    border: 3px solid transparent;
-    transition: all 0.3s;
-}
-
-.spinner::before {
-    border-top-color: #0a84ff;
-    border-right-color: #0a84ff;
-    animation: spin 1.5s linear infinite;
-    box-shadow: 0 0 15px rgba(10, 132, 255, 0.5);
-}
-
-.spinner::after {
-    border-bottom-color: #bf5af2; /* Lila (passend zu Rezepten) */
-    border-left-color: #bf5af2;
-    animation: spin 1.5s linear infinite reverse;
-    box-shadow: 0 0 15px rgba(191, 90, 242, 0.5); /* Lila Glow */
-}
-
 @keyframes spin {
     to { transform: rotate(360deg); }
 }
@@ -1175,6 +1145,26 @@ h3 {
     0% { transform: scale(1); opacity: 1; }
     50% { transform: scale(1.08); opacity: 0.9; }
     100% { transform: scale(1); opacity: 1; }
+}
+
+/* --- AI LOADING ANIMATION (Schneller) --- */
+.ai-loading-logo {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 20px;
+    /* Schnelles Pulsieren (0.6s) wirkt wie "Rechnen" */
+    animation: aiProcessing 0.6s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes aiProcessing {
+    0% { 
+        transform: scale(0.95); 
+        filter: drop-shadow(0 0 15px rgba(10, 132, 255, 0.6)); /* Start: Blau */
+    }
+    100% { 
+        transform: scale(1.15); 
+        filter: drop-shadow(0 0 35px rgba(191, 90, 242, 0.9)); /* Ende: Lila Glow */
+    }
 }
 
 /* Disclaimer Text */
