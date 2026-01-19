@@ -34,6 +34,7 @@
         <!-- Login Screen -->
         <div id="auth-screen" class="auth-container">
             <div class="auth-box">
+                <img src="icon.svg" class="auth-logo" alt="NutriScan AI">
                 <h2>Willkommen</h2>
                 <p style="color: #888; margin-bottom: 20px;">Bitte melde dich an, um deine Daten zu speichern.</p>
                 <input type="email" id="authEmail" placeholder="E-Mail Adresse" autocomplete="username" inputmode="email">
@@ -41,7 +42,6 @@
                 <button id="loginBtn" class="primary-btn">Einloggen</button>
                 <button id="registerBtn" class="secondary-btn">Registrieren</button>
                 <p id="authError" style="color: #ff453a; margin-top: 10px; font-size: 14px;"></p>
-                <button id="openLegalAuthBtn" style="background: none; border: none; color: #666; font-size: 12px; margin-top: 15px; text-decoration: underline; cursor: pointer;">Datenschutz & Impressum</button>
             </div>
         </div>
 
@@ -377,33 +377,6 @@
                 <button id="saveNewRecipeBtn" class="primary-btn" style="margin-top: 20px;">Rezept speichern</button>
             </div>
 
-            <!-- Rechtliches & Datenschutz Modal -->
-            <div id="legalModal" class="manual-entry-box hidden">
-                <div class="manual-entry-header">
-                    <h3>Rechtliches</h3>
-                    <button id="closeLegalBtn" class="close-modal-btn">X</button>
-                </div>
-                <div class="legal-content" style="font-size: 13px; color: #ccc; line-height: 1.6;">
-                    <h4 style="color: white; margin-bottom: 5px;">1. Datenspeicherung</h4>
-                    <p>Deine Ernährungsdaten, Rezepte und Profileinstellungen werden sicher in einer <strong>Google Firebase Datenbank</strong> (Cloud Firestore) gespeichert. Die Authentifizierung erfolgt ebenfalls über Google Firebase Auth.</p>
-                    
-                    <h4 style="color: white; margin-bottom: 5px; margin-top: 15px;">2. Genutzte APIs & Dienste</h4>
-                    <ul style="padding-left: 20px; margin: 5px 0;">
-                        <li><strong>Google Gemini / OpenAI:</strong> Zur Bildanalyse werden Fotos an die API des jeweiligen Anbieters gesendet. Die Bilder werden dort laut Anbieter nur zur Analyse verarbeitet und nicht dauerhaft gespeichert (Stateless).</li>
-                        <li><strong>Open Food Facts:</strong> Produktdaten und Barcodes werden über die öffentliche Open Food Facts Datenbank abgerufen.</li>
-                    </ul>
-
-                    <h4 style="color: white; margin-bottom: 5px; margin-top: 15px;">3. Lokaler Speicher (Cookies)</h4>
-                    <p>Wir nutzen den lokalen Speicher deines Geräts (LocalStorage/Cookies), um deinen Login-Status, deine API-Keys (verschlüsselt) und App-Einstellungen zu speichern. Dies ist für die Funktion der App technisch notwendig.</p>
-
-                    <h4 style="color: white; margin-bottom: 5px; margin-top: 15px;">4. Impressum</h4>
-                    <p>Betreiber der App:<br>
-                    [Dein Name / Firma]<br>
-                    [Deine Adresse]<br>
-                    Kontakt: [Deine E-Mail]</p>
-                </div>
-            </div>
-
             <p class="disclaimer-text">⚠️ Hinweis: Alle Werte sind KI-generierte Schätzungen und dienen nur zur groben Orientierung.</p>
         </main>
 
@@ -448,6 +421,33 @@
         </div>
 
         </div>
+
+        <!-- Rechtliches & Datenschutz Modal (Außerhalb von app-content für Login-Zugriff) -->
+        <div id="legalModal" class="manual-entry-box hidden">
+            <div class="manual-entry-header">
+                <h3>Rechtliches</h3>
+                <button id="closeLegalBtn" class="close-modal-btn">X</button>
+            </div>
+            <div class="legal-content" style="font-size: 13px; color: #ccc; line-height: 1.6;">
+                <h4 style="color: white; margin-bottom: 5px;">1. Datenspeicherung</h4>
+                <p>Deine Ernährungsdaten, Rezepte und Profileinstellungen werden sicher in einer <strong>Google Firebase Datenbank</strong> (Cloud Firestore) gespeichert. Die Authentifizierung erfolgt ebenfalls über Google Firebase Auth.</p>
+                
+                <h4 style="color: white; margin-bottom: 5px; margin-top: 15px;">2. Genutzte APIs & Dienste</h4>
+                <ul style="padding-left: 20px; margin: 5px 0;">
+                    <li><strong>Google Gemini / OpenAI:</strong> Zur Bildanalyse werden Fotos an die API des jeweiligen Anbieters gesendet. Die Bilder werden dort laut Anbieter nur zur Analyse verarbeitet und nicht dauerhaft gespeichert (Stateless).</li>
+                    <li><strong>Open Food Facts:</strong> Produktdaten werden aus der Open Food Facts Datenbank abgerufen (Lizenz: ODbL).</li>
+                </ul>
+
+                <h4 style="color: white; margin-bottom: 5px; margin-top: 15px;">3. Lokaler Speicher (Cookies)</h4>
+                <p>Wir nutzen den lokalen Speicher deines Geräts (LocalStorage/Cookies), um deinen Login-Status, deine API-Keys (verschlüsselt) und App-Einstellungen zu speichern. Dies ist für die Funktion der App technisch notwendig.</p>
+
+                <h4 style="color: white; margin-bottom: 5px; margin-top: 15px;">4. Impressum</h4>
+                <p>Betreiber der App:<br>
+                [Dein Name / Firma]<br>
+                [Deine Adresse]<br>
+                Kontakt: [Deine E-Mail]</p>
+            </div>
+        </div>
     </div>
 
     <!-- Lade-Overlay (Spinner) -->
@@ -458,8 +458,11 @@
 
     <!-- Cookie Banner -->
     <div id="cookieBanner" class="cookie-banner hidden">
-        <p style="margin: 0; font-size: 13px; color: #ddd;">🍪 Wir nutzen Speichertechnologien für den Login & die App-Funktion.</p>
-        <button id="acceptCookiesBtn" style="background: #fff; color: #000; border: none; padding: 8px 16px; border-radius: 20px; font-weight: bold; font-size: 12px; cursor: pointer;">Alles klar</button>
+        <p style="margin: 0; font-size: 13px; color: #ddd; line-height: 1.4;">🍪 Wir nutzen Cookies für den Login (notwendig) und zur Verbesserung der App (optional).</p>
+        <div class="cookie-buttons">
+            <button id="declineCookiesBtn" class="cookie-btn-secondary">Nur Notwendige</button>
+            <button id="acceptCookiesBtn" class="cookie-btn-primary">Alle akzeptieren</button>
+        </div>
     </div>
 
     <!-- Toast Container für Benachrichtigungen -->

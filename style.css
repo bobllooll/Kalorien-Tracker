@@ -31,6 +31,11 @@ body {
     -webkit-tap-highlight-color: transparent;
 }
 
+/* Verhindert Scrollen im Hintergrund, wenn ein Modal offen ist */
+body.no-scroll {
+    overflow: hidden;
+}
+
 .app-container {
     width: 100%;
     max-width: 480px; /* Mobile Breite simulieren */
@@ -76,6 +81,14 @@ body {
     border-radius: 32px;
     padding: 40px 30px;
     box-shadow: 0 40px 80px rgba(0,0,0,0.6);
+}
+
+.auth-logo {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 15px auto;
+    display: block;
+    filter: drop-shadow(0 0 20px rgba(191, 90, 242, 0.3));
 }
 
 .auth-box h2 {
@@ -529,6 +542,10 @@ input[type="file"] {
 @keyframes modalPop {
     from { opacity: 0; transform: translate(-50%, -45%) scale(0.95); }
     to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+#legalModal {
+    z-index: 4000; /* Muss über dem Login-Screen (z-index 3000) liegen */
 }
 
 .manual-entry-header {
@@ -1184,10 +1201,38 @@ h3 {
     box-sizing: border-box;
     z-index: 6000;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
+    align-items: stretch;
     gap: 15px;
     animation: slideUp 0.5s ease cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.cookie-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.cookie-btn-primary {
+    background: #fff;
+    color: #000;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 12px;
+    font-weight: bold;
+    font-size: 13px;
+    cursor: pointer;
+    flex: 1;
+}
+
+.cookie-btn-secondary {
+    background: transparent;
+    color: #aaa;
+    border: 1px solid #444;
+    padding: 10px 16px;
+    border-radius: 12px;
+    font-size: 13px;
+    cursor: pointer;
+    flex: 1;
 }
 
 /* Disclaimer Text */

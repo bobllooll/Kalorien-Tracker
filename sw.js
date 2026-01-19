@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nutriscan-v86';
+const CACHE_NAME = 'nutriscan-v14';
 const ASSETS = [
   './',
   './index.html',

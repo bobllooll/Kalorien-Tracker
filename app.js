@@ -12,11 +12,16 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Analytics sicher initialisieren (verhindert Absturz bei deaktivierten Cookies/IndexedDB)
+// Analytics Logik (wird erst nach Zustimmung geladen)
 let analytics;
-isSupported().then(supported => {
-    if (supported) analytics = getAnalytics(app);
-}).catch(console.error);
+async function initAnalytics() {
+    try {
+        const supported = await isSupported();
+        if (supported) analytics = getAnalytics(app);
+    } catch (e) {
+        console.error("Analytics init failed", e);
+    }
+}
 
 const appLoadingScreen = document.getElementById('appLoadingScreen');
 const cameraInput = document.getElementById('cameraInput');
@@ -90,10 +95,10 @@ const recipeInputs = { name: document.getElementById('recipeName'), cal: documen
 // Legal & Cookies
 const legalModal = document.getElementById('legalModal');
 const openLegalBtn = document.getElementById('openLegalBtn');
-const openLegalAuthBtn = document.getElementById('openLegalAuthBtn');
 const closeLegalBtn = document.getElementById('closeLegalBtn');
 const cookieBanner = document.getElementById('cookieBanner');
 const acceptCookiesBtn = document.getElementById('acceptCookiesBtn');
+const declineCookiesBtn = document.getElementById('declineCookiesBtn');
 
 const hybridModeToggle = document.getElementById('hybridModeToggle');
 const hybridInfoBtn = document.getElementById('hybridInfoBtn');
@@ -160,6 +165,7 @@ function openModal(modalElement) {
     if (modalElement.classList.contains('hidden')) {
         modalElement.classList.remove('hidden');
         openModalsStack.push(modalElement);
+        document.body.classList.add('no-scroll'); // Scrollen sperren
         // Fügt einen Eintrag in die History hinzu
         history.pushState({ modalOpen: true, id: modalElement.id }, '');
     }
@@ -185,6 +191,11 @@ window.addEventListener('popstate', () => {
         if (modal.id === 'scannerModal') {
             stopCamera();
         }
+    }
+
+    // Wenn keine Modals mehr offen sind, Scrollen wieder erlauben
+    if (openModalsStack.length === 0) {
+        document.body.classList.remove('no-scroll');
     }
 });
 
@@ -243,16 +254,26 @@ loginBtn.addEventListener('click', async () => {
     loginBtn.disabled = true;
     authError.textContent = "";
     
+    const email = authEmail.value.trim();
+    const password = authPassword.value;
+
+    if (!email || !password) {
+        authError.textContent = "Bitte E-Mail und Passwort eingeben.";
+        loginBtn.disabled = false;
+        loginBtn.textContent = originalText;
+        return;
+    }
+
     try {
         loginBtn.textContent = "Verbinde...";
-        const userCredential = await signInWithEmailAndPassword(auth, authEmail.value, authPassword.value);
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
         
         // Schlüssel aus Passwort ableiten und speichern
         loginBtn.textContent = "Entschlüssle...";
         // Kleiner Timeout, damit der Browser das UI rendern kann (PBKDF2 blockiert kurz)
         await new Promise(r => setTimeout(r, 50));
         
-        const key = await deriveKeyFromPassword(authPassword.value, userCredential.user.uid);
+        const key = await deriveKeyFromPassword(password, userCredential.user.uid);
         const exported = await crypto.subtle.exportKey("jwk", key);
         localStorage.setItem('app_encryption_key', JSON.stringify(exported));
         
@@ -264,6 +285,8 @@ loginBtn.addEventListener('click', async () => {
         console.error(error);
         if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
             authError.textContent = "Die Zugangsdaten stimmen nicht.";
+        } else if (error.code === 'auth/invalid-email') {
+            authError.textContent = "Ungültige E-Mail Adresse.";
         } else if (error.code === 'auth/too-many-requests') {
             authError.textContent = "Zu viele Versuche. Bitte warte kurz.";
         } else {
@@ -281,15 +304,25 @@ registerBtn.addEventListener('click', async () => {
     registerBtn.disabled = true;
     authError.textContent = "";
 
+    const email = authEmail.value.trim();
+    const password = authPassword.value;
+
+    if (!email || !password) {
+        authError.textContent = "Bitte E-Mail und Passwort eingeben.";
+        registerBtn.disabled = false;
+        registerBtn.textContent = originalText;
+        return;
+    }
+
     try {
         registerBtn.textContent = "Erstelle Konto...";
-        const userCredential = await createUserWithEmailAndPassword(auth, authEmail.value, authPassword.value);
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         
         // Schlüssel aus Passwort ableiten und speichern
         registerBtn.textContent = "Verschlüssle...";
         await new Promise(r => setTimeout(r, 50));
 
-        const key = await deriveKeyFromPassword(authPassword.value, userCredential.user.uid);
+        const key = await deriveKeyFromPassword(password, userCredential.user.uid);
         const exported = await crypto.subtle.exportKey("jwk", key);
         localStorage.setItem('app_encryption_key', JSON.stringify(exported));
     } catch (error) {
@@ -298,8 +331,10 @@ registerBtn.addEventListener('click', async () => {
             authError.textContent = "Diese E-Mail wird schon verwendet.";
         } else if (error.code === 'auth/weak-password') {
             authError.textContent = "Das Passwort ist zu schwach (min. 6 Zeichen).";
+        } else if (error.code === 'auth/invalid-email') {
+            authError.textContent = "Ungültige E-Mail Adresse.";
         } else {
-            authError.textContent = "Registrierung hat nicht geklappt.";
+            authError.textContent = "Registrierung fehlgeschlagen: " + error.message;
         }
     } finally {
         registerBtn.disabled = false;
@@ -323,19 +358,39 @@ async function loadUserData() {
 
     if (docSnap.exists()) {
         const data = docSnap.data();
-        // API Keys setzen
-        API_KEY = await decryptText(data.geminiKey || '');
-        OPENAI_API_KEY = await decryptText(data.openaiKey || '');
-        // Historie laden
-        if (data.history) {
-            calorieHistory = data.history;
-        }
-        if (data.goals) {
-            userGoals = data.goals;
-        }
-        if (data.recipes) {
-            userRecipes = data.recipes;
-        }
+        
+        // Hilfsfunktion: Entschlüsseln oder Originalwert nehmen (Abwärtskompatibilität)
+        const smartDecrypt = async (val) => {
+            if (!val) return '';
+            // Nur versuchen zu entschlüsseln, wenn es wie unser Format aussieht (Hex:Hex)
+            if (typeof val === 'string' && val.includes(':')) {
+                const decrypted = await decryptText(val);
+                return decrypted || val; 
+            }
+            return val; // Alter Wert (Klartext)
+        };
+
+        // API Keys setzen (unterstützt jetzt auch alte Klartext-Keys)
+        API_KEY = await smartDecrypt(data.geminiKey);
+        OPENAI_API_KEY = await smartDecrypt(data.openaiKey);
+
+        // Hilfsfunktion zum Entschlüsseln von JSON-Daten
+        const decryptJSON = async (encryptedVal, fallback) => {
+            if (typeof encryptedVal === 'string') {
+                const json = await smartDecrypt(encryptedVal);
+                try { return json ? JSON.parse(json) : fallback; } 
+                catch (e) { console.error("Parse Error", e); return fallback; }
+            }
+            return encryptedVal || fallback; // Fallback für alte, unverschlüsselte Daten (Objekte)
+        };
+
+        calorieHistory = await decryptJSON(data.history, { entries: [] });
+        userGoals = await decryptJSON(data.goals, { calories: 2500, protein: 150, fat: 80, carbs: 300, water: 2500 });
+        userRecipes = await decryptJSON(data.recipes, []);
+        
+        // Profile Data laden (auch verschlüsselt)
+        const loadedProfileData = await decryptJSON(data.profileData, {});
+
         // API Nutzung laden
         if (data.apiUsage) {
             const today = toISODateString(new Date());
@@ -348,13 +403,13 @@ async function loadUserData() {
         updateApiUsageDisplay();
 
         // Profil-Daten für Berechnung füllen (falls vorhanden)
-        if (data.profileData) {
-            profileGoal.value = data.profileData.goal || 'maintain';
-            profileWeight.value = data.profileData.weight || '';
-            profileHeight.value = data.profileData.height || '';
-            profileAge.value = data.profileData.age || '';
-            profileGender.value = data.profileData.gender || 'male';
-            profileActivity.value = data.profileData.activity || '1.2';
+        if (loadedProfileData) {
+            profileGoal.value = loadedProfileData.goal || 'maintain';
+            profileWeight.value = loadedProfileData.weight || '';
+            profileHeight.value = loadedProfileData.height || '';
+            profileAge.value = loadedProfileData.age || '';
+            profileGender.value = loadedProfileData.gender || 'male';
+            profileActivity.value = loadedProfileData.activity || '1.2';
         }
         
         // Profil-Inputs füllen
@@ -390,11 +445,12 @@ async function saveUserData(saveKeys = false) {
     };
 
     const dataToSave = {
-        history: calorieHistory,
-        goals: newGoals,
-        profileData: profileData,
-        recipes: userRecipes,
-        apiUsage: apiUsage
+        // Alles verschlüsseln! (JSON String -> Encrypt -> Hex String)
+        history: await encryptText(JSON.stringify(calorieHistory)),
+        goals: await encryptText(JSON.stringify(newGoals)),
+        profileData: await encryptText(JSON.stringify(profileData)),
+        recipes: await encryptText(JSON.stringify(userRecipes)),
+        apiUsage: apiUsage // API Nutzung bleibt lesbar für Limits/Admin
     };
 
     // Keys nur speichern, wenn explizit angefordert (verhindert Überschreiben durch Auto-Save)
@@ -673,13 +729,17 @@ analyzeBtn.addEventListener('click', async function() {
                     let offData;
                     try {
                         // Versuch 1: Alte API (Bessere Treffer)
-                        const offRes = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(jsonResponse.productSearchQuery)}&search_simple=1&action=process&json=1&page_size=1&fields=product_name,nutriments`);
+                        const offRes = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(jsonResponse.productSearchQuery)}&search_simple=1&action=process&json=1&page_size=1&fields=product_name,nutriments`, {
+                            headers: { "User-Agent": "NutriScanAI - Web - v1.0" }
+                        });
                         offData = await offRes.json();
                         console.log("📦 OFF API V1 Result:", offData);
                     } catch (e) {
                         // Versuch 2: Neue API (Fallback)
                         console.warn("Fallback auf API V2 für Hybrid-Check");
-                        const offRes = await fetch(`https://world.openfoodfacts.org/api/v2/search?search_terms=${encodeURIComponent(jsonResponse.productSearchQuery)}&page_size=1&fields=product_name,nutriments`);
+                        const offRes = await fetch(`https://world.openfoodfacts.org/api/v2/search?search_terms=${encodeURIComponent(jsonResponse.productSearchQuery)}&page_size=1&fields=product_name,nutriments`, {
+                            headers: { "User-Agent": "NutriScanAI - Web - v1.0" }
+                        });
                         offData = await offRes.json();
                         console.log("📦 OFF API V2 Result:", offData);
                     }
@@ -1001,7 +1061,9 @@ function renderAiResult(jsonResponse, usedModelName) {
             try {
                 // 1. Suche in Open Food Facts
                 const offUrl = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(newName)}&search_simple=1&action=process&json=1&page_size=1&fields=product_name,nutriments`;
-                const offRes = await fetch(offUrl);
+                const offRes = await fetch(offUrl, {
+                    headers: { "User-Agent": "NutriScanAI - Web - v1.0" }
+                });
                 const offData = await offRes.json();
 
                 if (offData.products && offData.products.length > 0) {
@@ -1324,13 +1386,17 @@ productSearchBtn.addEventListener('click', async () => {
         let data;
         try {
             // Versuch 1: Alte API (Bessere Ergebnisse für Marken, aber oft CORS-Probleme)
-            const response = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${query}&search_simple=1&action=process&json=1&page_size=5&fields=product_name,nutriments,image_front_small_url,image_small_url`);
+            const response = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${query}&search_simple=1&action=process&json=1&page_size=5&fields=product_name,nutriments,image_front_small_url,image_small_url`, {
+                headers: { "User-Agent": "NutriScanAI - Web - v1.0" }
+            });
             data = await response.json();
             console.log("📦 SEARCH RESULT (V1):", data);
         } catch (e) {
             console.warn("Fallback auf API V2 wegen Fehler:", e);
             // Versuch 2: Neue API V2 (Stabiler, aber manchmal weniger Treffer)
-            const response = await fetch(`https://world.openfoodfacts.org/api/v2/search?search_terms=${query}&page_size=5&fields=product_name,nutriments,image_front_small_url,image_small_url`);
+            const response = await fetch(`https://world.openfoodfacts.org/api/v2/search?search_terms=${query}&page_size=5&fields=product_name,nutriments,image_front_small_url,image_small_url`, {
+                headers: { "User-Agent": "NutriScanAI - Web - v1.0" }
+            });
             data = await response.json();
             console.log("📦 SEARCH RESULT (V2):", data);
         }
@@ -1727,17 +1793,28 @@ function addWaterEntry(amount) {
 
 // --- LEGAL & COOKIES LOGIK ---
 if (openLegalBtn) openLegalBtn.addEventListener('click', () => openModal(legalModal));
-if (openLegalAuthBtn) openLegalAuthBtn.addEventListener('click', () => openModal(legalModal));
 if (closeLegalBtn) closeLegalBtn.addEventListener('click', () => closeModal());
 
 // Cookie Banner Check
-if (!localStorage.getItem('cookiesAccepted')) {
+const cookieStatus = localStorage.getItem('cookiesAccepted');
+
+if (!cookieStatus) {
     // Kurze Verzögerung für Animation
     setTimeout(() => cookieBanner.classList.remove('hidden'), 1000);
+} else if (cookieStatus === 'true') {
+    // Wenn bereits akzeptiert, Analytics starten
+    initAnalytics();
 }
 
 if (acceptCookiesBtn) acceptCookiesBtn.addEventListener('click', () => {
     localStorage.setItem('cookiesAccepted', 'true');
+    initAnalytics(); // Analytics nachträglich starten
+    cookieBanner.classList.add('hidden');
+});
+
+if (declineCookiesBtn) declineCookiesBtn.addEventListener('click', () => {
+    localStorage.setItem('cookiesAccepted', 'essential'); // Nur Essenzielle
+    // Analytics wird NICHT gestartet
     cookieBanner.classList.add('hidden');
 });
 
@@ -2176,7 +2253,9 @@ async function onScanSuccess(decodedText, decodedResult) {
 
     try {
         // Open Food Facts API abfragen
-        const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${decodedText}.json`);
+        const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${decodedText}.json`, {
+            headers: { "User-Agent": "NutriScanAI - Web - v1.0" }
+        });
         const data = await response.json();
     console.log("📦 BARCODE API RESULT:", data);
 
