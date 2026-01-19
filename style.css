@@ -6,6 +6,7 @@
 html {
     scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none; /* IE/Edge */
+    overscroll-behavior: none; /* Verhindert Pull-to-Refresh global */
 }
 
 body {

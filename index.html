@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Kalorien Schätzer AI</title>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
@@ -274,7 +274,7 @@
                     </div>
                     <span class="card-title">AI Foto Scan</span>
                     <span class="card-desc">Erkennt dein Essen automatisch</span>
-                    <input type="file" id="cameraInput" accept="image/*" capture="environment">
+                    <input type="file" id="cameraInput" accept="image/*">
                 </label>
                 
                 <!-- Rezepte Kachel -->
@@ -370,7 +370,7 @@
         </main>
 
         <!-- Scanner Modal (Vollbild) -->
-        <div id="scannerModal" class="manual-entry-box hidden" style="width: 100%; height: 100%; max-width: none; max-height: none; border-radius: 0; background: #000; top: 0; left: 0; transform: none; padding: 0;">
+        <div id="scannerModal" class="manual-entry-box hidden" style="width: 100%; height: 100%; max-width: none; max-height: none; border-radius: 0; background: #000; top: 0; left: 0; transform: none; padding: 0; border: none; box-shadow: none;">
             <div class="manual-entry-header" style="position: absolute; top: 40px; left: 20px; right: 20px; z-index: 10; border-bottom: none;">
                 <h3 style="text-shadow: 0 2px 4px rgba(0,0,0,0.8);">Barcode Scannen</h3>
                 <button id="closeScannerBtn" class="close-modal-btn" style="background: rgba(0,0,0,0.5); border-radius: 50%; width: 40px; height: 40px;">X</button>
