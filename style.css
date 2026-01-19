@@ -1476,6 +1476,12 @@ input:checked + .slider:before { transform: translateX(20px); }
     transition: opacity 0.5s ease-out;
 }
 
+/* Google reCAPTCHA Badge ausblenden (dafür Hinweis im Impressum) */
+.grecaptcha-badge {
+    visibility: hidden !important;
+}
+
+
 /* Snack hinzufügen Button wieder weiß */
 #toggleManualEntryBtn {
     background: #ffffff;

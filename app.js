@@ -100,6 +100,14 @@ const closeLegalBtn = document.getElementById('closeLegalBtn');
 const cookieBanner = document.getElementById('cookieBanner');
 const acceptCookiesBtn = document.getElementById('acceptCookiesBtn');
 const declineCookiesBtn = document.getElementById('declineCookiesBtn');
+// Tutorial
+const tutorialModal = document.getElementById('tutorialModal');
+const openTutorialBtn = document.getElementById('openTutorialBtn');
+const closeTutorialBtn = document.getElementById('closeTutorialBtn');
+const finishTutorialBtn = document.getElementById('finishTutorialBtn');
+// Update Modal
+const updateModal = document.getElementById('updateModal');
+const refreshAppBtn = document.getElementById('refreshAppBtn');
 
 const hybridModeToggle = document.getElementById('hybridModeToggle');
 const hybridInfoBtn = document.getElementById('hybridInfoBtn');
@@ -235,6 +243,13 @@ onAuthStateChanged(auth, async (user) => {
         
         // Lade-Screen ausblenden (mit kurzer Verzögerung für Smoothness)
         setTimeout(() => appLoadingScreen.classList.add('fade-out-screen'), 300);
+
+        // Tutorial anzeigen, wenn noch kein API Key hinterlegt ist
+        if (!API_KEY) {
+            setTimeout(() => {
+                openModal(tutorialModal);
+            }, 1000);
+        }
         
     } else {
         // User ist ausgeloggt
@@ -269,8 +284,8 @@ loginBtn.addEventListener('click', async () => {
         loginBtn.textContent = "Verbinde...";
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
 
-        // 2FA Check: Ist die E-Mail bestätigt?
-        if (!userCredential.user.emailVerified) {
+        // 2FA Check: Ist die E-Mail bestätigt? (Ausnahme für @hanneken.cloud Domain)
+        if (!userCredential.user.emailVerified && !email.toLowerCase().endsWith('@hanneken.cloud')) {
             await signOut(auth); // Sofort wieder ausloggen
             authError.textContent = "Bitte bestätige erst deine E-Mail Adresse (Link im Posteingang).";
             return;
@@ -321,8 +336,23 @@ registerBtn.addEventListener('click', async () => {
         return;
     }
 
+    // Sperre für interne Domain (nur Admin darf diese anlegen)
+    if (email.toLowerCase().endsWith('@hanneken.cloud')) {
+        authError.textContent = "Diese Domain ist für die öffentliche Registrierung gesperrt.";
+        registerBtn.disabled = false;
+        registerBtn.textContent = originalText;
+        return;
+    }
+
     // reCAPTCHA v3 Ausführung
     registerBtn.textContent = "Prüfe Sicherheit...";
+
+    if (typeof grecaptcha === 'undefined') {
+        authError.textContent = "Sicherheitsdienst nicht geladen. Bitte Seite neu laden.";
+        registerBtn.disabled = false;
+        registerBtn.textContent = originalText;
+        return;
+    }
     
     try {
         // Wir warten auf das reCAPTCHA Token (Client-Side Check)
@@ -349,8 +379,22 @@ registerBtn.addEventListener('click', async () => {
         authError.textContent = "Bestätigungs-Link gesendet. Bitte E-Mail freischalten, dann einloggen.";
         
     } catch (error) {
-        console.error(error);
-        authError.textContent = "Fehler: " + error.message;
+        // Nur loggen, wenn es KEIN erwarteter "Admin Restricted" Fehler ist
+        if (error.code !== 'auth/admin-restricted-operation') {
+            console.error(error);
+        }
+
+        if (error.code === 'auth/email-already-in-use') {
+            authError.textContent = "Diese E-Mail wird schon verwendet.";
+        } else if (error.code === 'auth/weak-password') {
+            authError.textContent = "Das Passwort ist zu schwach (min. 6 Zeichen).";
+        } else if (error.code === 'auth/invalid-email') {
+            authError.textContent = "Ungültige E-Mail Adresse.";
+        } else if (error.code === 'auth/admin-restricted-operation') {
+            authError.textContent = "Aktuell nur für ausgewählte Benutzer.";
+        } else {
+            authError.textContent = "Registrierung fehlgeschlagen: " + error.message;
+        }
     } finally {
         registerBtn.disabled = false;
         registerBtn.textContent = originalText;
@@ -1852,6 +1896,16 @@ if (declineCookiesBtn) declineCookiesBtn.addEventListener('click', () => {
     cookieBanner.classList.add('hidden');
 });
 
+// --- TUTORIAL LOGIK ---
+if (openTutorialBtn) openTutorialBtn.addEventListener('click', () => openModal(tutorialModal));
+if (closeTutorialBtn) closeTutorialBtn.addEventListener('click', () => closeModal());
+if (finishTutorialBtn) finishTutorialBtn.addEventListener('click', () => {
+    localStorage.setItem('tutorial_seen_v1', 'true');
+    closeModal();
+    // Profil öffnen, damit sie den Key eintragen können
+    setTimeout(() => openModal(profileModal), 300);
+});
+
 historyList.addEventListener('change', (e) => {
     if (e.target.classList.contains('weight-input')) {
         const entryIndex = e.target.dataset.entryIndex;
@@ -2241,17 +2295,20 @@ if ('serviceWorker' in navigator) {
                     if (installingWorker.state === 'installed') {
                         if (navigator.serviceWorker.controller) {
                             // Neues Update verfügbar!
-                            showToast("⚠️ UPDATE VERFÜGBAR!", "info");
-                            // Modal oder Alert anzeigen mit der gewünschten Nachricht
-                            setTimeout(() => {
-                                alert("Ein neues Update ist verfügbar!\n\nBitte lösche den Browser-Cache für diese Seite oder installiere die App neu, um Fehler zu vermeiden.");
-                                window.location.reload();
-                            }, 1000);
+                            // Statt Alert zeigen wir jetzt das schicke Modal
+                            if (updateModal) openModal(updateModal);
                         }
                     }
                 };
             };
         });
+    });
+}
+
+// Update Button Logik
+if (refreshAppBtn) {
+    refreshAppBtn.addEventListener('click', () => {
+        window.location.reload();
     });
 }
 
