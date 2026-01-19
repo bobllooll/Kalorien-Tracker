@@ -5,20 +5,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAnalytics, isSupported } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
-
-// --- FIREBASE KONFIGURATION ---
-// 1. Gehe auf console.firebase.google.com
-// 2. Erstelle ein Projekt -> Web App
-// 3. Kopiere deine Config hier rein:
-const firebaseConfig = {
-  apiKey: "AIzaSyAfuvS4T_B74D2dCkOVHOArMC8SEm72zKQ",
-  authDomain: "kalorientracker-9e36f.firebaseapp.com",
-  projectId: "kalorientracker-9e36f",
-  storageBucket: "kalorientracker-9e36f.firebasestorage.app",
-  messagingSenderId: "500128515431",
-  appId: "1:500128515431:web:abef4c94dea165cbb49bc2",
-  measurementId: "G-JDNQ4G8X0K"
-};
+import { firebaseConfig } from "./config.js";
 
 // Firebase initialisieren
 const app = initializeApp(firebaseConfig);
@@ -100,6 +87,13 @@ const createRecipeModal = document.getElementById('createRecipeModal');
 const closeCreateRecipeBtn = document.getElementById('closeCreateRecipeBtn');
 const saveNewRecipeBtn = document.getElementById('saveNewRecipeBtn');
 const recipeInputs = { name: document.getElementById('recipeName'), cal: document.getElementById('recipeCalories'), p: document.getElementById('recipeProtein'), f: document.getElementById('recipeFat'), c: document.getElementById('recipeCarbs') };
+// Legal & Cookies
+const legalModal = document.getElementById('legalModal');
+const openLegalBtn = document.getElementById('openLegalBtn');
+const openLegalAuthBtn = document.getElementById('openLegalAuthBtn');
+const closeLegalBtn = document.getElementById('closeLegalBtn');
+const cookieBanner = document.getElementById('cookieBanner');
+const acceptCookiesBtn = document.getElementById('acceptCookiesBtn');
 
 const hybridModeToggle = document.getElementById('hybridModeToggle');
 const hybridInfoBtn = document.getElementById('hybridInfoBtn');
@@ -1730,6 +1724,22 @@ function addWaterEntry(amount) {
     saveToHistory(entry);
     updateUIForDate();
 }
+
+// --- LEGAL & COOKIES LOGIK ---
+if (openLegalBtn) openLegalBtn.addEventListener('click', () => openModal(legalModal));
+if (openLegalAuthBtn) openLegalAuthBtn.addEventListener('click', () => openModal(legalModal));
+if (closeLegalBtn) closeLegalBtn.addEventListener('click', () => closeModal());
+
+// Cookie Banner Check
+if (!localStorage.getItem('cookiesAccepted')) {
+    // Kurze Verzögerung für Animation
+    setTimeout(() => cookieBanner.classList.remove('hidden'), 1000);
+}
+
+if (acceptCookiesBtn) acceptCookiesBtn.addEventListener('click', () => {
+    localStorage.setItem('cookiesAccepted', 'true');
+    cookieBanner.classList.add('hidden');
+});
 
 historyList.addEventListener('change', (e) => {
     if (e.target.classList.contains('weight-input')) {
