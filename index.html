@@ -270,14 +270,21 @@
             <!-- Hauptaktionen: Grid Layout -->
             <div class="action-grid">
                 <!-- AI Scan Kachel -->
-                <label for="cameraInput" class="action-card ai-card">
-                    <div class="card-icon">
-                        <svg class="icon-svg" style="width: 32px; height: 32px;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
-                    </div>
-                    <span class="card-title">AI Foto Scan</span>
-                    <span class="card-desc">Erkennt dein Essen automatisch</span>
-                    <input type="file" id="cameraInput" accept="image/*">
-                </label>
+                <div class="action-card ai-card" style="position: relative;">
+                    <label for="cameraInput" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; z-index: 1;">
+                        <div class="card-icon">
+                            <svg class="icon-svg" style="width: 32px; height: 32px;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
+                        </div>
+                        <span class="card-title">AI Foto Scan</span>
+                        <span class="card-desc">Erkennt dein Essen automatisch</span>
+                    </label>
+                    <input type="file" id="cameraInput" accept="image/*" capture="environment">
+                    
+                    <label for="galleryInput" style="position: absolute; bottom: 10px; right: 10px; width: 40px; height: 40px; background: rgba(255,255,255,0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 2; backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.2);">
+                        <svg class="icon-svg" viewBox="0 0 24 24" style="width: 20px; height: 20px;"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+                    </label>
+                    <input type="file" id="galleryInput" accept="image/*" multiple>
+                </div>
                 
                 <!-- Rezepte Kachel -->
                 <button id="recipesBtn" class="action-card recipe-card">
@@ -297,8 +304,8 @@
                 </div>
                 
                 <div class="analysis-layout">
-                    <div class="image-wrapper">
-                        <img id="imagePreview" alt="Vorschau">
+                    <div class="image-wrapper" id="imagePreviewContainer">
+                        <!-- Bilder werden hier eingefügt -->
                     </div>
                     <div class="input-wrapper">
                         <label for="descriptionInput" style="font-size: 12px; color: #888; display: block; margin-bottom: 5px;">Notiz an die KI (Optional):</label>

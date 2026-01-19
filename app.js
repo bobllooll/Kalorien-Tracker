@@ -33,7 +33,8 @@ isSupported().then(supported => {
 
 const appLoadingScreen = document.getElementById('appLoadingScreen');
 const cameraInput = document.getElementById('cameraInput');
-const imagePreview = document.getElementById('imagePreview');
+const galleryInput = document.getElementById('galleryInput');
+const imagePreviewContainer = document.getElementById('imagePreviewContainer');
 const analysisModal = document.getElementById('analysisModal');
 const closeAnalysisBtn = document.getElementById('closeAnalysisBtn');
 const analyzeBtn = document.getElementById('analyzeBtn');
@@ -148,7 +149,7 @@ let userRecipes = []; // Lokaler Cache der Rezepte
 let apiUsage = { date: '', count: 0 }; // API Nutzung Zähler
 
 let currentAiResult = null; // Globaler Zwischenspeicher für das aktuelle KI-Ergebnis
-let selectedFile = null;
+let selectedFiles = [];
 let currentDate = new Date();
 let html5QrCode = null; // Scanner Instanz
 let currentBarcodeData = null; // Zwischenspeicher für gefundenes Produkt
@@ -487,28 +488,35 @@ if (hybridInfoBtn) {
 }
 
 // Event Listener für Bildauswahl
-cameraInput.addEventListener('change', function(event) {
-    const file = event.target.files[0];
-    if (file) {
-        selectedFile = file;
-        const reader = new FileReader();
-        
-        reader.onload = function(e) {
-            imagePreview.src = e.target.result;
-            // Neue Logik: Karte anzeigen statt nur Bild
-            openModal(analysisModal);
-        }
-        
-        reader.readAsDataURL(file);
+function handleImageSelection(event) {
+    const files = event.target.files;
+    if (files && files.length > 0) {
+        selectedFiles = Array.from(files);
+        imagePreviewContainer.innerHTML = ''; // Vorherige Bilder löschen
+
+        selectedFiles.forEach(file => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.className = 'preview-thumb';
+                imagePreviewContainer.appendChild(img);
+            }
+            reader.readAsDataURL(file);
+        });
+        openModal(analysisModal);
     }
     // Input zurücksetzen, damit das 'change' Event auch feuert, 
     // wenn man danach direkt ein neues Foto macht
     event.target.value = '';
-});
+}
+
+cameraInput.addEventListener('change', handleImageSelection);
+if (galleryInput) galleryInput.addEventListener('change', handleImageSelection);
 
 // Event Listener für den Analyse-Button
 analyzeBtn.addEventListener('click', async function() {
-    if (!selectedFile) return;
+    if (!selectedFiles || selectedFiles.length === 0) return;
 
     // UI Feedback: Laden starten
     showLoading("Analysiere Bild...");
@@ -524,7 +532,7 @@ analyzeBtn.addEventListener('click', async function() {
     console.log("📥 INPUTS:", { 
         userText: userText, 
         hybridMode: useHybridMode,
-        imageSelected: !!selectedFile 
+        imageCount: selectedFiles.length 
     });
 
     if (!API_KEY) {
@@ -537,11 +545,11 @@ analyzeBtn.addEventListener('click', async function() {
     }
 
     try {
-        // 1. Bild komprimieren (nur einmal nötig)
-        loadingText.textContent = "Optimiere Bild...";
-        const base64Data = await compressImage(selectedFile, 800, 0.7);
+        // 1. Bilder komprimieren
+        loadingText.textContent = "Optimiere Bilder...";
+        const base64Images = await Promise.all(selectedFiles.map(file => compressImage(file, 800, 0.7)));
         const finalMimeType = 'image/jpeg';
-        console.log("🖼️ Image compressed. Length:", base64Data.length);
+        console.log(`🖼️ ${base64Images.length} Images compressed.`);
 
         // SDK initialisieren
         const genAI = new GoogleGenerativeAI(API_KEY);
@@ -562,8 +570,8 @@ analyzeBtn.addEventListener('click', async function() {
         
         WICHTIG:
         1. Prüfe, ob es sich um ein Lebensmittel handelt. Wenn nicht, setze "isFood" auf false.
-        2. Benenne das GERICHT als Ganzes (z.B. "Spaghetti Bolognese" statt "Nudeln, Soße, Fleisch"). Der Name muss kurz und prägnant sein.
-        3. Analysiere ALLE sichtbaren Komponenten einzeln (auch bei ungewöhnlichen Kombinationen, z.B. Schnitzel und Schokoriegel).
+        2. Benenne das GERICHT als Ganzes. Falls mehrere Bilder verschiedene Dinge zeigen, fasse sie zusammen.
+        3. Analysiere ALLE sichtbaren Komponenten auf den Bildern.
         4. Achte auf Mengenangaben im Nutzertext (z.B. "3 Stück", "2 Teller", "Hälfte").
         5. Falls du eine konkrete Marke oder Produktverpackung erkennst, fülle das Feld "productSearchQuery" mit dem genauen Produktnamen (z.B. "Vemondo Veganer Käse"). Sonst null.
         ${useHybridMode ? '6. HYBRID-MODUS AKTIV: Der Nutzer möchte einen Datenbank-Abgleich. Versuche besonders genau, Marken oder Produktnamen zu erkennen und in "productSearchQuery" einzutragen.' : ''}
@@ -607,15 +615,13 @@ analyzeBtn.addEventListener('click', async function() {
                         generationConfig: { responseMimeType: "application/json" }
                     });
 
-                    const result = await model.generateContent([
-                        prompt,
-                        {
-                            inlineData: {
-                                data: base64Data,
-                                mimeType: finalMimeType
-                            }
-                        }
-                    ]);
+                    // Content Array für Gemini bauen (Prompt + alle Bilder)
+                    const content = [prompt];
+                    base64Images.forEach(b64 => {
+                        content.push({ inlineData: { data: b64, mimeType: finalMimeType } });
+                    });
+
+                    const result = await model.generateContent(content);
 
                     const text = result.response.text();
                     console.log("📨 RAW RESPONSE:", text);
@@ -627,7 +633,7 @@ analyzeBtn.addEventListener('click', async function() {
                         console.log("Überspringe GPT-4o (Kein API Key)");
                         continue;
                     }
-                    const openAiRes = await callOpenAI(base64Data, prompt);
+                    const openAiRes = await callOpenAI(base64Images, prompt);
                     console.log("📨 RAW RESPONSE (OpenAI):", openAiRes);
                     jsonResponse = openAiRes;
                     usedModelName = strategy.model;
@@ -744,10 +750,14 @@ analyzeBtn.addEventListener('click', async function() {
                             let refinedJson = null;
                             // Wir nutzen das gleiche Modell wie beim ersten erfolgreichen Versuch
                             if (usedModelName.includes('gpt')) {
-                                refinedJson = await callOpenAI(base64Data, refinePrompt);
+                                refinedJson = await callOpenAI(base64Images, refinePrompt);
                             } else {
                                 const model = genAI.getGenerativeModel({ model: usedModelName, generationConfig: { responseMimeType: "application/json" }});
-                                const result = await model.generateContent([refinePrompt, { inlineData: { data: base64Data, mimeType: finalMimeType } }]);
+                                
+                                const content = [refinePrompt];
+                                base64Images.forEach(b64 => content.push({ inlineData: { data: b64, mimeType: finalMimeType } }));
+                                
+                                const result = await model.generateContent(content);
                                 const text = result.response.text();
                                 console.log("📨 REFINE RAW RESPONSE:", text);
                                 refinedJson = safeJsonParse(text);
@@ -988,7 +998,7 @@ function renderAiResult(jsonResponse, usedModelName) {
             const newName = prompt("Produktname korrigieren (z.B. Marke hinzufügen):", jsonResponse.name);
             if (!newName || newName === jsonResponse.name) return;
 
-            if (!selectedFile) {
+            if (!selectedFiles || selectedFiles.length === 0) {
                 showToast("Originalbild nicht mehr verfügbar.", "error");
                 return;
             }
@@ -1012,7 +1022,7 @@ function renderAiResult(jsonResponse, usedModelName) {
                         };
 
                         showLoading("Optimiere mit neuen Werten...");
-                        const base64Data = await compressImage(selectedFile, 800, 0.7);
+                        const base64Images = await Promise.all(selectedFiles.map(f => compressImage(f, 800, 0.7)));
                         
                         // Prompt für die Neuberechnung
                         const refinePrompt = `
@@ -1035,7 +1045,11 @@ function renderAiResult(jsonResponse, usedModelName) {
                         incrementApiUsage(); // Zählt als Aufruf
                         const genAI = new GoogleGenerativeAI(API_KEY);
                         const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash', generationConfig: { responseMimeType: "application/json" }});
-                        const result = await model.generateContent([refinePrompt, { inlineData: { data: base64Data, mimeType: 'image/jpeg' } }]);
+                        
+                        const content = [refinePrompt];
+                        base64Images.forEach(b64 => content.push({ inlineData: { data: b64, mimeType: 'image/jpeg' } }));
+                        
+                        const result = await model.generateContent(content);
                         const text = result.response.text();
                         const refinedJson = safeJsonParse(text);
 
@@ -1886,7 +1900,19 @@ function compressImage(file, maxWidth, quality) {
 /**
  * Hilfsfunktion: Aufruf an OpenAI GPT-4o
  */
-async function callOpenAI(base64Image, promptText) {
+async function callOpenAI(base64Images, promptText) {
+    // Content Array bauen
+    const content = [{ type: "text", text: promptText }];
+    
+    base64Images.forEach(b64 => {
+        content.push({
+            type: "image_url",
+            image_url: {
+                url: `data:image/jpeg;base64,${b64}`
+            }
+        });
+    });
+
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -1898,15 +1924,7 @@ async function callOpenAI(base64Image, promptText) {
             messages: [
                 {
                     role: "user",
-                    content: [
-                        { type: "text", text: promptText },
-                        {
-                            type: "image_url",
-                            image_url: {
-                                url: `data:image/jpeg;base64,${base64Image}`
-                            }
-                        }
-                    ]
+                    content: content
                 }
             ],
             response_format: { type: "json_object" },
@@ -1920,8 +1938,8 @@ async function callOpenAI(base64Image, promptText) {
     }
 
     const data = await response.json();
-    const content = data.choices[0].message.content;
-    return JSON.parse(content);
+    const responseContent = data.choices[0].message.content;
+    return JSON.parse(responseContent);
 }
 
 // --- VERSCHLÜSSELUNG (Client-Side) ---
