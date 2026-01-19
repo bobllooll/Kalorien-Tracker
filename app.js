@@ -2,7 +2,7 @@
 import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
 // Importiere Firebase SDKs
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendEmailVerification, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAnalytics, isSupported } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
 import { firebaseConfig } from "./config.js";
@@ -63,6 +63,7 @@ const authEmail = document.getElementById('authEmail');
 const authPassword = document.getElementById('authPassword');
 const loginBtn = document.getElementById('loginBtn');
 const registerBtn = document.getElementById('registerBtn');
+const forgotPasswordBtn = document.getElementById('forgotPasswordBtn');
 const authError = document.getElementById('authError');
 const openProfileBtn = document.getElementById('openProfileBtn');
 const profileModal = document.getElementById('profileModal');
@@ -267,6 +268,13 @@ loginBtn.addEventListener('click', async () => {
     try {
         loginBtn.textContent = "Verbinde...";
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
+
+        // 2FA Check: Ist die E-Mail bestätigt?
+        if (!userCredential.user.emailVerified) {
+            await signOut(auth); // Sofort wieder ausloggen
+            authError.textContent = "Bitte bestätige erst deine E-Mail Adresse (Link im Posteingang).";
+            return;
+        }
         
         // Schlüssel aus Passwort ableiten und speichern
         loginBtn.textContent = "Entschlüssle...";
@@ -310,37 +318,63 @@ registerBtn.addEventListener('click', async () => {
     if (!email || !password) {
         authError.textContent = "Bitte E-Mail und Passwort eingeben.";
         registerBtn.disabled = false;
-        registerBtn.textContent = originalText;
         return;
     }
 
+    // reCAPTCHA v3 Ausführung
+    registerBtn.textContent = "Prüfe Sicherheit...";
+    
     try {
+        // Wir warten auf das reCAPTCHA Token (Client-Side Check)
+        await new Promise((resolve) => {
+            grecaptcha.ready(() => {
+                grecaptcha.execute('6LdGe08sAAAAAPsA5RKV2qXbUWFScBJhUQZRS-0K', {action: 'submit'}).then(resolve);
+            });
+        });
+
         registerBtn.textContent = "Erstelle Konto...";
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         
-        // Schlüssel aus Passwort ableiten und speichern
-        registerBtn.textContent = "Verschlüssle...";
-        await new Promise(r => setTimeout(r, 50));
-
+        // E-Mail Verifizierung senden
+        await sendEmailVerification(userCredential.user);
+        
+        // Schlüssel generieren (damit er existiert), aber NICHT einloggen lassen
         const key = await deriveKeyFromPassword(password, userCredential.user.uid);
-        const exported = await crypto.subtle.exportKey("jwk", key);
-        localStorage.setItem('app_encryption_key', JSON.stringify(exported));
+        // Wir speichern den Key hier NICHT im LocalStorage, da der User sich erst verifizieren muss
+        
+        // Sofort ausloggen
+        await signOut(auth);
+
+        showToast(`Link an ${email} gesendet!`, "success");
+        authError.textContent = "Bestätigungs-Link gesendet. Bitte E-Mail freischalten, dann einloggen.";
+        
     } catch (error) {
         console.error(error);
-        if (error.code === 'auth/email-already-in-use') {
-            authError.textContent = "Diese E-Mail wird schon verwendet.";
-        } else if (error.code === 'auth/weak-password') {
-            authError.textContent = "Das Passwort ist zu schwach (min. 6 Zeichen).";
-        } else if (error.code === 'auth/invalid-email') {
-            authError.textContent = "Ungültige E-Mail Adresse.";
-        } else {
-            authError.textContent = "Registrierung fehlgeschlagen: " + error.message;
-        }
+        authError.textContent = "Fehler: " + error.message;
     } finally {
         registerBtn.disabled = false;
         registerBtn.textContent = originalText;
     }
 });
+
+// Passwort vergessen
+if (forgotPasswordBtn) {
+    forgotPasswordBtn.addEventListener('click', async () => {
+        const email = authEmail.value.trim();
+        if (!email) {
+            authError.textContent = "Bitte gib deine E-Mail-Adresse oben ein.";
+            return;
+        }
+        try {
+            await sendPasswordResetEmail(auth, email);
+            showToast("Reset-Link gesendet!", "success");
+            authError.textContent = "Prüfe deinen Posteingang (auch Spam).";
+        } catch (e) {
+            console.error(e);
+            authError.textContent = "Fehler: " + e.message;
+        }
+    });
+}
 
 // Logout
 logoutBtn.addEventListener('click', () => {
@@ -2199,7 +2233,25 @@ window.addEventListener('appinstalled', () => {
 // --- PWA SERVICE WORKER ---
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js');
+        navigator.serviceWorker.register('./sw.js').then(reg => {
+            // Update Check
+            reg.onupdatefound = () => {
+                const installingWorker = reg.installing;
+                installingWorker.onstatechange = () => {
+                    if (installingWorker.state === 'installed') {
+                        if (navigator.serviceWorker.controller) {
+                            // Neues Update verfügbar!
+                            showToast("⚠️ UPDATE VERFÜGBAR!", "info");
+                            // Modal oder Alert anzeigen mit der gewünschten Nachricht
+                            setTimeout(() => {
+                                alert("Ein neues Update ist verfügbar!\n\nBitte lösche den Browser-Cache für diese Seite oder installiere die App neu, um Fehler zu vermeiden.");
+                                window.location.reload();
+                            }, 1000);
+                        }
+                    }
+                };
+            };
+        });
     });
 }
 
