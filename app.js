@@ -310,6 +310,8 @@ loginBtn.addEventListener('click', async () => {
             authError.textContent = "Die Zugangsdaten stimmen nicht.";
         } else if (error.code === 'auth/invalid-email') {
             authError.textContent = "Ungültige E-Mail Adresse.";
+        } else if (error.code === 'auth/network-request-failed') {
+            authError.innerHTML = "Verbindung fehlgeschlagen.<br>⚠️ <b>Schul-WLAN?</b> Versuche mobile Daten.";
         } else if (error.code === 'auth/too-many-requests') {
             authError.textContent = "Zu viele Versuche. Bitte warte kurz.";
         } else {
@@ -957,6 +959,10 @@ analyzeBtn.addEventListener('click', async function() {
             title = "Tageslimit erreicht";
             message = "Die kostenlosen Anfragen für deine API-Keys sind für heute aufgebraucht. Bitte versuche es morgen wieder oder prüfe deine Keys im Profil.";
             icon = "⏳";
+        } else if (message.includes('Failed to fetch') || message.includes('NetworkError')) {
+            title = "Verbindungsproblem";
+            message = "Konnte die KI nicht erreichen. Blockiert dein WLAN (Schule/Arbeit) den Zugriff? Versuche mobile Daten.";
+            icon = "📡";
         }
 
         resultArea.innerHTML = `
@@ -2475,3 +2481,12 @@ function safeJsonParse(text) {
         throw new Error("KI-Antwort konnte nicht verarbeitet werden (Ungültiges JSON).");
     }
 }
+
+// --- NETZWERK STATUS ---
+window.addEventListener('offline', () => {
+    showToast("Du bist offline. App läuft im Cache-Modus.", "info");
+});
+
+window.addEventListener('online', () => {
+    showToast("Wieder online!", "success");
+});

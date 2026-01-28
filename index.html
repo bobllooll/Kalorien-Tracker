@@ -11,6 +11,26 @@
     <meta name="theme-color" content="#000000">
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <script src="https://www.google.com/recaptcha/api.js?render=6LdGe08sAAAAAPsA5RKV2qXbUWFScBJhUQZRS-0K"></script>
+    <!-- Error Handler: Falls Schul-WLAN Skripte blockiert -->
+    <script>
+        window.addEventListener('error', function(e) {
+            // Prüft, ob das Haupt-Skript app.js nicht geladen werden konnte
+            if (e.target.tagName === 'SCRIPT' && e.target.src && e.target.src.includes('app.js')) {
+                const loader = document.getElementById('appLoadingScreen');
+                if (loader) {
+                    loader.innerHTML = `
+                        <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; padding:20px; text-align:center; color:white;">
+                            <div style="font-size:40px; margin-bottom:20px;">🛡️</div>
+                            <h3>Verbindung blockiert</h3>
+                            <p style="color:#ccc; margin-bottom:20px; line-height:1.5;">Das Netzwerk (z.B. Schul-WLAN) blockiert die App-Dateien.<br>Versuche die Standard-Adresse:</p>
+                            <a href="https://kalorien-tracker.pages.dev" style="background:#0a84ff; color:white; text-decoration:none; padding:12px 24px; border-radius:12px; font-weight:bold;">Zur .pages.dev Version</a>
+                            <p style="font-size:12px; color:#666; margin-top:20px;">Tipp: Installiere die App zu Hause, dann geht sie auch hier.</p>
+                        </div>
+                    `;
+                }
+            }
+        }, true);
+    </script>
 </head>
 <body>
     <div class="app-container">
