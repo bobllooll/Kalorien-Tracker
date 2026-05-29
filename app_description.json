@@ -1,0 +1,155 @@
+{
+  "appName": "NutriScan AI",
+  "version": "9.0 (Premium Upgrade)",
+  "concept": "Ein moderner, hochauflösender Progressive Web App (PWA) Kalorientracker mit künstlicher Intelligenz zur Bildanalyse, Barcode-Scanning und lokaler Verschlüsselung für maximale Privatsphäre.",
+  "designSystem": {
+    "style": "Apple Health & Linear.app Dark Theme (Minimalistisch, modern, dezent)",
+    "colors": {
+      "background": "#09090b (Mattes pure Zink-Dunkelgrau)",
+      "surface": "#18181b (Unified Card Background - Zinc 900)",
+      "borders": "#27272a (Präzise dünne Linien - Zinc 800)",
+      "primaryAccent": "#ffffff (Reinweiß für primäre Steuerung & Tasten)",
+      "secondaryAccent": "#27272a (Sekundär-Buttons & Ränder)",
+      "calories": "#ffffff (Kcal-Diagramm)",
+      "protein": "#3b82f6 (Clean-Blue für Muskelaufbau)",
+      "fat": "#f59e0b (Amber-Gold für gesunde Fette)",
+      "carbs": "#22c55e (Smaragd-Grün für Energie/Kohlenhydrate)",
+      "water": "#3b82f6 (Slate-Blau für Flüssigkeitszufuhr)"
+    },
+    "typography": {
+      "headings": "Outfit (Google Font - Geometrisch, elegant)",
+      "body": "Plus Jakarta Sans (Google Font - Extrem leserlich)"
+    }
+  },
+  "architecture": {
+    "pwaShell": "Single-Page Application (SPA) mit einer schwebenden, matt-gläsernen Bottom-Navigationsleiste für ein nativ-wirkendes App-Gefühl.",
+    "stateManagement": "Vanilla JS State, dynamisch synchronisiert mit dem lokalen Speicher (LocalStorage) und der Cloud.",
+    "security": "Client-seitige AES-GCM (256-Bit) Verschlüsselung. Alle persönlichen Daten, Mahlzeiten, Körperwerte und API-Keys werden vor dem Upload in die Firebase-Cloud auf dem Gerät des Nutzers verarbeitet und verschlüsselt.",
+    "offlineFirst": "Lokaler Offline-Cache für Barcode- & Produktsuchen. Ein Service Worker sichert die vollständige Offline-Nutzbarkeit."
+  },
+  "coreFeatures": {
+    "dashboard": {
+      "title": "Heute (Tagesübersicht)",
+      "features": [
+        {
+          "name": "Tages-Navigation",
+          "description": "Erlaubt das nahtlose Blättern durch vergangene und zukünftige Tage, um Mahlzeiten und Wasseraufnahme rückwirkend einzusehen und anzupassen."
+        },
+        {
+          "name": "Streak-Zähler (Gamification)",
+          "description": "Ein intelligenter Algorithmus analysiert die Historie und zeigt ein warmes, dezentes Flammen-Badge ('🔥 X Tage Streak') bei kontinuierlicher Erfassung von Nahrung oder Wasser."
+        },
+        {
+          "name": "Flat Macro Progress Rings",
+          "description": "Flache, kreisförmige Diagramme für Kcal, Protein, Fett und Carbs. Sie visualisieren scharf und ohne ablenkende Gaming-Drop-Shadows den aktuellen Bedarf im Verhältnis zum Tagesziel."
+        },
+        {
+          "name": "Wochen-Balkendiagramm (Past 7 Days)",
+          "description": "Ein Flexbox-Diagramm aggregiert die Gesamtkalorien der letzten 7 Tage mit einer gestrichelten Tagesziel-Linie. Konsistente Tage färben sich dezent grau, Überschreitungen weich rot."
+        },
+        {
+          "name": "Wasser Tracker (Hydration Capsule)",
+          "description": "Eine minimalistische, organische Glaskapsel zeigt den aktuellen Wasserstand. Schnelltasten (+250ml, +500ml, +750ml, -250ml) erlauben schnelles Buchen mit haptischem Feedback."
+        },
+        {
+          "name": "Quick-Add Karussell",
+          "description": "Ein scrollbares Karussell mit Schnellwahl-Chips (z.B. Glas Wasser, Kaffee schwarz, Apfel, Banane) für das Eintragen häufig genutzter Lebensmittel mit nur einem Klick."
+        },
+        {
+          "name": "Tages-Verlaufshistorie",
+          "description": "Chronologische Liste aller eingetragenen Mahlzeiten mit direktem Lösch-Button. Analysierte KI-Gerichte lassen sich nachträglich aufklappen."
+        }
+      ]
+    },
+    "scanAndAdd": {
+      "title": "KI-Scanner & Hinzufügen",
+      "features": [
+        {
+          "name": "AI Foto-Scan (NutriScan AI)",
+          "description": "Sendet Fotos von Mahlzeiten an die Google Gemini API. Die KI erkennt das Gericht, zerlegt es in Zutaten, schätzt die Gewichte und liefert eine mathematische Nährwertaufteilung."
+        },
+        {
+          "name": "Interaktiver Zutaten-Baukasten (Live Weight Sliders)",
+          "description": "Ermöglicht es dem Nutzer, das geschätzte Gewicht jeder erkannten Zutat per Schieberegler live anzupassen. Die Nährwerte der Zutat und die Gesamtkalorien des Gerichts werden in Echtzeit per Dreisatz neu berechnet."
+        },
+        {
+          "name": "Hybrid Marken-Scan",
+          "description": "Kombiniert KI-Bilderkennung mit der Open Food Facts API. Bei Markenprodukten holt die App die echten Labor-Nährwerte und lässt die KI lediglich die Portionsgröße auf dem Foto schätzen."
+        },
+        {
+          "name": "Barcode-Scanner",
+          "description": "Kamera-basierter Barcode-Scanner (HTML5-QRCode) für Verpackungen. Erkennt Produkte, lädt Nährwerte per OFF-API und erlaubt die Skalierung nach verzehrter Gramm-Menge."
+        },
+        {
+          "name": "Datenbank-Suche mit Offline-Cache",
+          "description": "Durchsucht Open Food Facts nach Begriffen. Abgerufene Ergebnisse werden im lokalen LocalStorage zwischengespeichert, um API-Aufrufe zu minimieren und offline sofort bereitzustehen."
+        },
+        {
+          "name": "Manuelles Schnellformular",
+          "description": "Für die klassische manuelle Eingabe von Lebensmitteln mit Name, Menge, Einheit, Kcal und Makros inklusive Schnellwahl-Tasten für Gewichte (100g, 250g, 500g, 1000g)."
+        }
+      ]
+    },
+    "recipes": {
+      "title": "Rezept-Bibliothek",
+      "features": [
+        {
+          "name": "Eigene Vorlagen",
+          "description": "Nutzer können eigene Mahlzeiten als feste Rezepte speichern und benennen. Diese lassen sich im Add-Tab mit nur einem Klick in den Tag eintragen, ohne sie erneut scannen oder eintippen zu müssen."
+        }
+      ]
+    },
+    "profileAndSettings": {
+      "title": "Profil & Einstellungen",
+      "features": [
+        {
+          "name": "Bedarfs-Rechner (Mifflin-St Jeor)",
+          "description": "Errechnet automatisch den Kalorien-Grundumsatz und Gesamtbedarf basierend auf Körpergewicht, Größe, Alter, biologischem Geschlecht und dem Aktivitätslevel (PAL-Faktor). Verrechnet Überschuss für Muskelaufbau (+300 kcal) oder Defizit für Fettabbau (-500 kcal)."
+        },
+        {
+          "name": "Manuelle Tageslimits",
+          "description": "Ermöglicht das freie Anpassen der Zielwerte für Kalorien, Protein, Fett, Kohlenhydrate und Wasser."
+        },
+        {
+          "name": "API-Schlüsselverwaltung",
+          "description": "Sicherer lokaler Speicher für eigene Google Gemini und OpenAI API-Schlüssel. Inklusive Zähler für die täglichen KI-Anfragen."
+        },
+        {
+          "name": "JSON Daten-Export",
+          "description": "Ermöglicht den vollständigen Export aller Ernährungsdaten, Ziele und Rezepte als strukturierte JSON-Datei zur Datensicherung."
+        }
+      ]
+    },
+    "smartFeatures": {
+      "title": "System-Funktionalitäten",
+      "features": [
+        {
+          "name": "Haptisches Feedback",
+          "description": "Einbindung präziser Vibrationsmuster (Success-Doppelvibration, Klick-Vibration, Error-Fehlervibration) für fühlbare Interaktionen."
+        },
+        {
+          "name": "Ziel-Confetti",
+          "description": "Triggert ein feines Partikel-Feuerwerk auf einem transparenten Canvas, sobald das Kalorien- oder Wasser-Tageslimit punktgenau erreicht bzw. überschritten wird."
+        }
+      ]
+    }
+  },
+  "fileStructure": {
+    "index.html": "Das HTML5-Grundgerüst der App. Definiert die App-Shell, die Tab-Container, die SVG-Gradienten für die Füllstände sowie alle Modals (Scanner, Rezepteditor, Tutorial und Datenschutzerklärung).",
+    "style.css": "Das visuelle Herzstück. Etabliert das minimalistische Slate-Grau Designsystem, die responsive Positionierung des Navigations-Docks, die Fortschrittsringe, die Glaskapsel des Wasserwidgets und alle Übergangseffekte.",
+    "app.js": "Die Anwendungslogik. Steuert das Tab-Routing, die mathematische Nährwert-Liveberechnung über die Slider, die Confetti-Physik auf dem Canvas, den PWA-Datenfluss, die Barcode-Kamera und die clientseitige AES-Verschlüsselung.",
+    "sw.js": "Der Service Worker. Ermöglicht Offline-Funktionalität durch Caching aller statischen Assets und verwaltet Cache-Updates (aktuell v12).",
+    "manifest.json": "PWA-Konfiguration. Definiert Anwendungsnamen, Start-URL, App-Icons und das minimalistische Betriebssystem-Theme für die Installation auf dem Homescreen."
+  },
+  "technologies": [
+    "HTML5 (Semantische Struktur)",
+    "CSS3 (Vanilla CSS mit Grid, Flexbox, HSL-Designsystem & Custom Properties)",
+    "Javascript (ES6+, Vanilla JS DOM-Manipulation & State-Handling)",
+    "Google Firebase (Firestore Cloud-Datenbank & Firebase Auth)",
+    "Google Gemini API (KI Bildanalyse & JSON-Strukturierung)",
+    "IndexedDB / LocalStorage (Client-seitige Speicherung)",
+    "Web Crypto API (AES-GCM 256-Bit Ver- und Entschlüsselung)",
+    "HTML5-QRCode (Barcode-Scanner-Bibliothek)",
+    "Open Food Facts API (Produktdatenbank-Anbindung)"
+  ]
+}

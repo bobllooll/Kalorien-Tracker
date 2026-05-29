@@ -1,774 +1,1063 @@
-/* Scrollbar komplett ausblenden (für Native App Look) */
+/* ==========================================================================
+   🥗 NUTRISCAN AI - CLEAN MINIMALIST DESIGN SYSTEM (SLATE & MONOCHROME)
+   ========================================================================== */
+
+/* 1. GOOGLE FONTS IMPORT */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+/* 2. DESIGN TOKENS (VARIABLES - MINIMALIST APPLE/LINEAR STYLE) */
+:root {
+    /* Neutrale & Slate Grautöne */
+    --bg-primary: #09090b;       /* Pure Dark Zinc */
+    --bg-surface: #18181b;       /* Zinc 900 */
+    --bg-card: #18181b;          /* Unified Card BG */
+    
+    /* Monochrome & Subtile Akzente (Kein Gaming/Neon) */
+    --accent-primary: #ffffff;    /* Reinweiß für primäre Buttons/Aktionen */
+    --accent-secondary: #27272a;  /* Zinc 800 für Ränder/Sekundär-Buttons */
+    --accent-active: #ffffff;     /* Aktive States */
+    
+    /* Funktionale Farben (Dezent, flach, gut lesbar) */
+    --accent-blue: #3b82f6;       /* Clean Blue (Wasser/Ziel) */
+    --accent-blue-bg: rgba(59, 130, 246, 0.1);
+    
+    --accent-green: #22c55e;      /* Neutral Emerald */
+    --accent-green-bg: rgba(34, 197, 94, 0.1);
+    
+    --accent-gold: #f59e0b;       /* Amber Gold */
+    --accent-gold-bg: rgba(245, 158, 11, 0.1);
+    
+    --accent-red: #ef4444;        /* Soft Red */
+    --accent-red-bg: rgba(239, 68, 68, 0.1);
+    
+    /* Ränder & Linien (Sehr dünn und präzise) */
+    --border-thin: #27272a;       /* Zinc 800 */
+    --border-hover: #3f3f46;      /* Zinc 700 */
+    --border-focus: #52525b;      /* Zinc 600 */
+    
+    /* Text-Hierarchie */
+    --text-primary: #f4f4f5;     /* Zinc 100 */
+    --text-secondary: #a1a1aa;   /* Zinc 400 */
+    --text-muted: #52525b;       /* Zinc 600 */
+    
+    /* Transitionen (Sehr schnell und direkt) */
+    --transition-fast: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 3. RESET & BASE STYLES */
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
 ::-webkit-scrollbar {
-    display: none;
+    display: none; /* Scrollbalken unsichtbar */
 }
 
 html {
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE/Edge */
-    overscroll-behavior: none; /* Verhindert Pull-to-Refresh global */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    overscroll-behavior: none;
+    font-size: 16px;
 }
 
 body {
-    font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background-color: #000000;
-    color: #ffffff;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
     margin: 0;
     padding: 0;
     display: flex;
     justify-content: center;
     min-height: 100vh;
-    /* Subtiler Hintergrund-Schein für Atmosphäre */
-    background-image: radial-gradient(circle at 50% 0%, #2d1b4e 0%, #000000 60%);
-    /* Verhindert "Gummiband"-Effekt beim Scrollen (Native App Feel) */
+    overflow-x: hidden;
     overscroll-behavior-y: none;
-    /* Safe Areas für iPhone X+ (Notch & Home Bar) */
+    
+    /* iPhone Safe Areas */
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
-    /* Entfernt graue Tap-Boxen auf Mobile */
-    -webkit-tap-highlight-color: transparent;
 }
 
-/* Verhindert Scrollen im Hintergrund, wenn ein Modal offen ist */
 body.no-scroll {
     overflow: hidden;
 }
 
+/* 4. MAIN CONTAINER & LAYOUT */
 .app-container {
     width: 100%;
-    max-width: 480px; /* Mobile Breite simulieren */
-    background: transparent;
+    max-width: 460px;
     min-height: 100vh;
-    padding: 25px;
-    box-shadow: none;
+    padding: 24px 20px 100px 20px;
     display: flex;
     flex-direction: column;
-    box-sizing: border-box;
-    /* Mehr Platz unten für besseres Scrollen auf Mobile */
-    padding-bottom: 80px;
+    position: relative;
 }
 
-/* Auth Screen Styles */
-.auth-container {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: #000000;
-    z-index: 3000;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
-    box-sizing: border-box;
-    /* Tiefer, atmosphärischer Hintergrund */
-    background-image: radial-gradient(circle at 50% 30%, #1c1c1e 0%, #000000 70%);
+main {
+    flex: 1;
+    width: 100%;
 }
 
-.auth-box {
-    width: 100%; 
-    max-width: 340px;
-    display: flex; 
-    flex-direction: column; 
-    gap: 15px;
-    text-align: center;
-    
-    /* Premium Glas-Effekt */
-    background: rgba(28, 28, 30, 0.6);
-    backdrop-filter: blur(30px);
-    -webkit-backdrop-filter: blur(30px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 32px;
-    padding: 40px 30px;
-    box-shadow: 0 40px 80px rgba(0,0,0,0.6);
+/* 5. APP-SHELL TAB ROUTER */
+.tab-content {
+    display: none;
+    animation: tabFadeIn 0.2s ease-out forwards;
 }
 
-.auth-logo {
-    width: 80px;
-    height: 80px;
-    margin: 0 auto 15px auto;
+.tab-content.active {
     display: block;
-    filter: drop-shadow(0 0 20px rgba(191, 90, 242, 0.3));
 }
 
-.auth-box h2 {
-    margin: 0;
-    font-size: 26px;
-    font-weight: 700;
-    letter-spacing: -0.5px;
-    color: #fff;
-    margin-bottom: 5px;
+@keyframes tabFadeIn {
+    from { opacity: 0; transform: translateY(3px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-.auth-box input {
-    background: rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #fff;
-    padding: 18px;
-    border-radius: 16px;
-    font-size: 16px;
-    transition: all 0.3s ease;
-    text-align: center;
+/* 6. CARD DESIGN (CLEAN MONOCHROME) */
+.glass-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-thin);
+    border-radius: 20px;
+    padding: 22px;
+    margin-bottom: 18px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    transition: var(--transition-fast);
 }
 
-.auth-box input::placeholder {
-    color: #555;
+.glass-card:hover {
+    border-color: var(--border-hover);
 }
 
-.auth-box input:focus {
-    outline: none;
-    border-color: #bf5af2;
-    background: rgba(0, 0, 0, 0.4);
-    transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+/* 7. BOTTOM NAVIGATION DOCK (MINIMALISTISCH) */
+.bottom-nav {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 40px);
+    max-width: 420px;
+    height: 64px;
+    background: #0c0c0e;
+    border: 1px solid var(--border-thin);
+    border-radius: 20px;
+    z-index: 2500;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    padding: 0 8px;
 }
 
-/* Spezifische Button-Styles für die Auth-Box überschreiben */
-.auth-box .primary-btn {
-    background: #fff;
-    color: #000;
+.nav-item {
+    background: none;
     border: none;
-    font-weight: 700;
-    margin-top: 10px;
-    transition: transform 0.2s;
+    color: var(--text-muted);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 10px;
+    font-weight: 600;
+    font-family: inherit;
+    gap: 3px;
+    flex: 1;
+    height: 100%;
+    transition: var(--transition-fast);
 }
 
-.auth-box .primary-btn:hover {
-    transform: scale(1.02);
+.nav-item svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: var(--transition-fast);
 }
 
-.auth-box .secondary-btn {
-    background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    color: #aaa;
+.nav-item:hover {
+    color: var(--text-secondary);
 }
 
-.auth-box .secondary-btn:hover {
-    border-color: #fff;
-    color: #fff;
-    background: rgba(255,255,255,0.05);
+.nav-item.active {
+    color: var(--accent-primary);
+}
+
+.nav-item.active svg {
+    stroke: var(--accent-primary);
+    transform: translateY(-1px);
+}
+
+/* Zentraler Scan-Button (Schlicht integriert, kein leuchtendes Gaming-Lila) */
+.nav-item-scan {
+    flex: 0 0 54px;
+    height: 54px;
+    margin-top: -24px;
+    background: var(--accent-primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 
+        0 8px 20px rgba(255, 255, 255, 0.1),
+        0 0 0 4px #0c0c0e;
+    color: #000000 !important;
+    border: none;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.nav-item-scan svg {
+    width: 22px;
+    height: 22px;
+    stroke: #000000 !important;
+    stroke-width: 2.2;
+}
+
+.nav-item-scan:hover {
+    transform: translateY(-3px);
+    box-shadow: 
+        0 10px 24px rgba(255, 255, 255, 0.15),
+        0 0 0 5px #0c0c0e;
+}
+
+.nav-item-scan:active {
+    transform: translateY(-1px) scale(0.96);
+}
+
+/* 8. HEADER & TOP BAR */
+header {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 4px;
 }
 
 header h1 {
-    text-align: center;
-    color: #ffffff;
-    font-size: 1rem;
-    font-weight: 500;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    opacity: 0.8;
+    font-family: 'Outfit', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
     margin: 0;
+    color: var(--text-primary);
+}
+
+.header-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
 }
 
 .icon-btn {
-    background: #1c1c1e;
-    border: 1px solid #333;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-thin);
     border-radius: 50%;
-    width: 40px; height: 40px;
-    font-size: 15px;
-    font-weight: 600;
-    color: white;
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+    color: var(--text-primary);
     cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    transition: border-color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition-fast);
 }
 
 .icon-btn:hover {
-    border-color: #fff;
+    border-color: var(--border-hover);
+    background: rgba(255,255,255,0.03);
 }
 
+/* 9. WIDGETS & MODULES */
+
+/* A. Tages-Navigations-Leiste */
 .day-nav {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-thin);
+    border-radius: 14px;
+    padding: 6px;
     margin-bottom: 20px;
 }
 
 .day-nav h2 {
-    margin: 0;
-    font-size: 1.2rem;
+    font-family: 'Outfit', sans-serif;
+    font-size: 15px;
     font-weight: 600;
-    color: #fff;
+    margin: 0;
+    letter-spacing: -0.2px;
 }
 
 .nav-btn {
-    background: none;
-    border: 1px solid #333;
-    color: #fff;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    font-size: 20px;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
-    transition: all 0.2s;
+    font-size: 16px;
+    transition: var(--transition-fast);
+}
+
+.nav-btn:hover:not(:disabled) {
+    background: rgba(255,255,255,0.05);
+    color: white;
 }
 
 .nav-btn:disabled {
-    opacity: 0.3;
+    opacity: 0.2;
     cursor: not-allowed;
 }
 
-.input-group {
-    margin-bottom: 25px;
+/* B. Streak Badge (Schlicht & Minimalistisch, keine pulsierende Flamme) */
+.streak-badge {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-thin);
+    padding: 8px 14px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    align-self: center;
+    margin-bottom: 20px;
+}
+
+/* C. Tagesbedarf Progress Ringe (Flach & Sauber, kein Glühen) */
+.macro-stats {
     display: flex;
     flex-direction: column;
+    align-items: center;
+    gap: 16px;
 }
 
-input[type="text"] {
-    padding: 18px;
-    border: 1px solid #222;
+.radial-chart {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.chart-bg {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.04);
+    stroke-width: 2.8;
+}
+
+.chart-stroke {
+    fill: none;
+    stroke-width: 2.8;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.8s ease-out;
+}
+
+.radial-chart.xlarge {
+    width: 130px;
+    height: 130px;
+}
+
+.radial-chart.xlarge .chart-bg,
+.radial-chart.xlarge .chart-stroke {
+    stroke-width: 3.2;
+}
+
+.radial-chart span {
+    position: absolute;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    color: white;
+}
+
+.radial-chart.xlarge span {
+    font-size: 26px;
+    letter-spacing: -0.5px;
+}
+
+.radial-chart:not(.xlarge) {
+    width: 62px;
+    height: 62px;
+}
+
+.radial-chart:not(.xlarge) span {
+    font-size: 12px;
+}
+
+.macro-row {
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+    padding-top: 18px;
+}
+
+.macro-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.macro-item > span:last-child {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+}
+
+/* D. Wochen-Balkendiagramm (Schlicht & Flach) */
+.week-chart-container {
+    margin-top: 8px;
+}
+
+.week-chart-container h3 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0 0 16px 0;
+}
+
+.week-bars {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    height: 120px;
+    align-items: end;
+    gap: 8px;
+    padding-bottom: 20px;
+    position: relative;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+/* Dezentere Ziellinie */
+.chart-limit-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    border-top: 1px dashed rgba(255, 255, 255, 0.25);
+    z-index: 1;
+    pointer-events: none;
+}
+
+.chart-limit-line::after {
+    content: 'Ziel';
+    position: absolute;
+    right: 0;
+    top: -9px;
+    font-size: 8px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    background: var(--bg-surface);
+    padding: 1px 3px;
+    border-radius: 3px;
+    border: 1px solid var(--border-thin);
+}
+
+.week-bar-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    justify-content: flex-end;
+    position: relative;
+    z-index: 2;
+}
+
+.week-bar {
+    width: 100%;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.06);
+    min-height: 2px;
+    transition: height 0.6s ease-out;
+    position: relative;
+}
+
+.week-bar.filled {
+    background: var(--text-secondary); /* Schlichtes Grau statt Neongradient */
+}
+
+.week-bar.overfilled {
+    background: var(--accent-red);   /* Rot-Ton bei Überfüllung */
+}
+
+.week-bar:hover::after {
+    content: attr(data-val) ' kcal';
+    position: absolute;
+    top: -24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #09090b;
+    border: 1px solid var(--border-thin);
+    color: white;
+    padding: 3px 6px;
+    font-size: 9px;
+    font-weight: 600;
+    border-radius: 4px;
+    white-space: nowrap;
+    z-index: 10;
+}
+
+.week-day-label {
+    margin-top: 6px;
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.week-bar-wrapper.today .week-day-label {
+    color: var(--text-primary);
+    font-weight: 800;
+}
+
+/* E. Hydration / Wasser Widget (Schnittig, flach, keine Wellen/Blasen) */
+.water-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.water-info h3 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.water-value {
+    font-size: 18px;
+    font-weight: 700;
+    font-family: 'Outfit', sans-serif;
+}
+
+.water-value span {
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.water-widget-body {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    justify-content: space-between;
+}
+
+.water-controls-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+}
+
+.water-btn-row {
+    display: flex;
+    gap: 8px;
+}
+
+.water-action-btn {
+    flex: 1;
+    height: 40px;
+    border-radius: 12px;
+    border: 1px solid var(--border-thin);
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition-fast);
+}
+
+.water-action-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: var(--border-hover);
+}
+
+.water-action-btn:active:not(:disabled) {
+    transform: scale(0.97);
+}
+
+.water-action-btn:disabled {
+    opacity: 0.2;
+    cursor: not-allowed;
+    border-color: rgba(255,255,255,0.03);
+    color: var(--text-muted);
+}
+
+/* Schlichte Glaskapsel (Ohne verspielte Wave-Animation und ohne Blasen) */
+.water-capsule {
+    width: 60px;
+    height: 90px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 2px solid var(--border-thin);
     border-radius: 16px;
-    font-size: 16px;
-    background: #0a0a0a;
-    color: #fff;
-    transition: all 0.3s ease;
-    font-weight: 400;
+    position: relative;
+    overflow: hidden;
 }
 
-input[type="text"]:focus {
-    outline: none;
-    border-color: #bf5af2;
-    background: #111;
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
+/* Flache Füllung statt Farbverlauf & Animation */
+.fluid-water-container {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 0%;
+    background: var(--accent-blue);
+    transition: height 0.6s ease-out;
 }
 
-/* Verstecke das Standard-File-Input und style das Label als Button */
-input[type="file"] {
-    display: none;
+/* Deaktiviere die SVGWellen im CSS */
+.water-waves {
+    display: none !important;
 }
 
-/* Neues Action Grid für Hauptbuttons */
+/* F. Quick Add Schnellwahl-Chips */
+.quick-add-container {
+    margin-bottom: 20px;
+}
+
+.quick-add-container h3 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0 0 12px 0;
+}
+
+.quick-add-scroll {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    scrollbar-width: none;
+}
+
+.quick-add-chip {
+    flex: 0 0 auto;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border-thin);
+    border-radius: 12px;
+    padding: 8px 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-primary);
+    transition: var(--transition-fast);
+}
+
+.quick-add-chip:hover {
+    background: rgba(255,255,255,0.05);
+    border-color: var(--border-hover);
+}
+
+.quick-add-icon {
+    font-size: 14px;
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* G. Dashboard Mahlzeit hinzufügen Trigger */
+.dashboard-add-trigger {
+    background: var(--accent-primary);
+    color: #000000;
+    font-size: 14px;
+    font-weight: 700;
+    height: 48px;
+    border-radius: 14px;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: var(--transition-fast);
+    margin-bottom: 20px;
+}
+
+.dashboard-add-trigger:hover {
+    background: rgba(255,255,255,0.9);
+}
+
+.dashboard-add-trigger:active {
+    transform: scale(0.98);
+}
+
+/* H. Historie Liste */
+.history-entry {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-thin);
+    border-radius: 16px;
+    padding: 14px 18px;
+    margin-bottom: 12px;
+    transition: var(--transition-fast);
+}
+
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+}
+
+.header-left h4 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: -0.2px;
+    color: white;
+}
+
+.header-right strong {
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.delete-btn {
+    background: none;
+    border: none;
+    color: var(--accent-red);
+    opacity: 0.5;
+    cursor: pointer;
+    padding: 4px;
+    transition: var(--transition-fast);
+}
+
+.delete-btn:hover {
+    opacity: 1;
+}
+
+/* Zutatentabelle in Historie */
+.ingredients-list {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.ingredient-row {
+    display: grid;
+    grid-template-columns: 1fr 60px 20px 54px 20px;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.ing-name {
+    font-weight: 500;
+}
+
+.weight-input {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--border-thin);
+    color: white;
+    padding: 5px;
+    border-radius: 6px;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    width: 100%;
+}
+
+.ing-unit {
+    color: var(--text-muted);
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.ing-kcal {
+    text-align: right;
+    font-weight: 600;
+}
+
+/* 10. SCANNER & ADD TILES PAGE */
 .action-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 15px;
-    margin-bottom: 25px;
+    gap: 14px;
+    margin-bottom: 20px;
 }
 
 .action-card {
-    background: #1c1c1e;
-    border: 1px solid #333;
-    border-radius: 20px;
-    padding: 20px 15px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-thin);
+    border-radius: 16px;
+    padding: 20px 14px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center;
     cursor: pointer;
-    transition: transform 0.2s, border-color 0.2s;
-    min-height: 140px;
+    min-height: 110px;
+    transition: var(--transition-fast);
     position: relative;
     overflow: hidden;
-    color: white; /* Fix: SVG Icons erben diese Farbe (weiß statt schwarz) */
 }
 
-.action-card:active {
-    transform: scale(0.96);
-    filter: brightness(1.2); /* Visuelles Feedback beim Klicken */
-    border-color: #fff;
-}
-
-.ai-card {
-    background: linear-gradient(145deg, #1c1c1e, #252528);
-    border-color: #0a84ff;
-}
-
-.recipe-card {
-    background: linear-gradient(145deg, #1c1c1e, #2c1c2e);
-    border-color: #9c27b0;
-}
-
-.card-icon {
-    font-size: 32px;
-    margin-bottom: 10px;
-}
-
-.card-title {
-    font-weight: 700;
-    font-size: 16px;
-    margin-bottom: 4px;
-}
-
-.card-desc {
-    font-size: 11px;
-    color: #888;
-    line-height: 1.3;
-}
-
-/* Neues Analyse Modal Layout */
-.analysis-layout {
-    display: flex;
-    gap: 15px;
-    margin-bottom: 20px;
-    background: #111;
-    padding: 15px;
-    border-radius: 16px;
-    border: 1px solid #222;
-}
-
-.image-wrapper {
-    width: auto;
-    max-width: 120px; /* Begrenzen, damit Input Platz hat */
-    height: 80px;
-    flex-shrink: 0;
-    border-radius: 12px;
-    overflow-x: auto; /* Scrollbar für mehrere Bilder */
-    display: flex;
-    gap: 5px;
-    border: 1px solid #333;
-}
-
-.preview-thumb {
-    width: 80px;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 8px;
-    flex-shrink: 0;
-}
-
-.input-wrapper {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
-
-#descriptionInput {
-    width: 100%;
-    background: transparent;
-    border: none;
-    color: white;
-    font-family: inherit;
-    font-size: 14px;
-    resize: none;
-    outline: none;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-.result {
-    margin-top: 30px;
-    padding: 25px;
-    background: #111;
-    border-radius: 20px;
-    font-size: 16px;
-    line-height: 1.5;
-    border: 1px solid #222;
-}
-
-.hidden {
+.action-card input[type="file"] {
     display: none !important;
 }
 
-/* Styles für die Statistik */
-.stats-box {
-    background: #111111;
-    padding: 30px 20px;
-    border-radius: 24px;
-    border: 1px solid #222;
-    margin-bottom: 30px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+.action-card:hover {
+    border-color: var(--border-hover);
+    background: rgba(255,255,255,0.02);
 }
 
-/* Wasser Tracker Styles */
-.water-box {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    position: relative;
-    overflow: hidden;
+.action-card:active {
+    transform: scale(0.97);
 }
 
-.water-info {
-    z-index: 2;
+.action-card.ai-card {
+    border-color: var(--border-thin);
 }
 
-.water-info h3 {
-    margin-bottom: 5px;
-    color: #64d2ff;
+.action-card.recipe-card {
+    border-color: var(--border-thin);
 }
 
-.water-info p {
+.action-card .card-icon {
     font-size: 24px;
-    font-weight: 700;
-    margin: 0 0 15px 0;
+    margin-bottom: 8px;
+}
+
+.action-card .card-title {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 3px;
     color: white;
 }
 
-.water-controls {
-    display: flex;
-    gap: 10px;
+.action-card .card-desc {
+    font-size: 10px;
+    color: var(--text-secondary);
+    line-height: 1.3;
 }
 
-.water-btn {
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
-    border: 1px solid rgba(100, 210, 255, 0.3);
-    background: rgba(100, 210, 255, 0.1);
-    color: #64d2ff;
-    font-size: 20px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-}
-
-.water-btn:active {
-    background: rgba(100, 210, 255, 0.3);
-    transform: scale(0.95);
-}
-
-.water-btn:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-    border-color: #444;
-    color: #666;
-}
-
-.bottle-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    justify-content: flex-end;
-    max-width: 60%; /* Damit der Text links noch Platz hat */
-}
-
-.bottle {
-    width: 32px;
-    height: 54px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    border-radius: 20px 20px 10px 10px;
-    position: relative;
-    overflow: hidden;
-    backdrop-filter: blur(5px);
-    flex-shrink: 0;
-}
-
-.water-fill {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 0%; /* Wird per JS gesteuert */
-    background: linear-gradient(to top, #0a84ff, #bf5af2);
-    transition: height 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 0 20px rgba(191, 90, 242, 0.5);
-}
-
-/* Wellen-Animation (Pseudo-Elemente) */
-.water-fill::before, .water-fill::after {
-    content: "";
-    position: absolute;
-    width: 140px;
-    height: 140px;
-    left: -54px; /* Zentriert über der 32px breiten Flasche (32/2 - 140/2 = -54) */
-    top: -130px;
-    background: rgba(255, 255, 255, 0.15);
-    border-radius: 40%;
-    animation: wave-spin 6s linear infinite;
-    animation-play-state: running; /* Immer an */
-}
-
-.water-fill::after {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 45%;
-    animation: wave-spin 10s linear infinite;
-    animation-play-state: running; /* Immer an */
-    top: -135px;
-}
-
-/* Große Flasche (wenn nur 1 angezeigt wird) */
-.bottle.large {
-    width: 60px;
-    height: 100px;
-}
-
-.bottle.large .water-fill::before, 
-.bottle.large .water-fill::after {
-    left: -40px; /* Zentriert für 60px Breite (60/2 - 140/2 = -40) */
-}
-
-@keyframes wave-spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-}
-
-.manual-entry-container {
-    margin-top: 30px;
-    margin-bottom: 30px;
-}
-
-.secondary-btn {
-    width: 100%;
-    padding: 15px;
-    background: #1c1c1e;
-    border: 1px solid #333;
-    color: #fff;
-    border-radius: 16px;
-    font-size: 16px;
-    font-weight: 500;
-    cursor: pointer;
-}
-
-.manual-entry-box {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 90%;
-    max-width: 350px;
-    z-index: 2000;
-    /* Premium Glas-Look */
-    background: rgba(30, 30, 32, 0.95);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 28px;
-    padding: 30px;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 100vmax rgba(0,0,0,0.85);
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    /* Scrollbar für kleine Screens / Landscape */
-    max-height: 85vh;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-}
-
-@keyframes modalPop {
-    from { opacity: 0; transform: translate(-50%, -45%) scale(0.95); }
-    to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-}
-
-#legalModal {
-    z-index: 4000; /* Muss über dem Login-Screen (z-index 3000) liegen */
-}
-
-.manual-entry-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 5px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.manual-entry-header h3 {
-    font-size: 20px;
-    letter-spacing: -0.5px;
-}
-
-.close-modal-btn {
-    background: none;
-    border: none;
-    color: #888;
-    cursor: pointer;
-    padding: 5px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.close-modal-btn:hover {
-    color: white;
-}
-
-.manual-entry-box input {
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #fff;
-    padding: 15px;
-    border-radius: 14px;
-    font-size: 15px;
-    transition: all 0.2s ease;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-.manual-entry-box input:focus {
-    background: rgba(0, 0, 0, 0.5);
-    border-color: #bf5af2;
-    outline: none;
-    transform: translateY(-1px);
-}
-
-/* Styles für das neue manuelle Menü */
+/* 11. MANUELLE SUCHE & UNIVERSAL-EINGABE */
 .search-container {
-    margin-bottom: 15px;
+    background: rgba(255,255,255,0.01);
+    border: 1px solid var(--border-thin);
+    border-radius: 16px;
+    padding: 14px;
+    margin-bottom: 18px;
 }
 
 .main-search-input {
     width: 100%;
-    padding: 16px;
-    font-size: 16px;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 12px;
+    padding: 12px 14px;
+    font-size: 14px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--border-thin);
+    border-radius: 10px;
     color: white;
     margin-bottom: 12px;
     box-sizing: border-box;
+    transition: var(--transition-fast);
 }
 
 .main-search-input:focus {
-    background: rgba(255,255,255,0.1);
-    border-color: #bf5af2;
     outline: none;
+    border-color: var(--border-focus);
 }
 
 .search-toolbar {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
-    gap: 8px;
-    margin-bottom: 20px;
+    gap: 6px;
 }
 
 .toolbar-btn {
-    padding: 10px 5px;
-    border-radius: 10px;
-    border: 1px solid rgba(255,255,255,0.1);
-    font-size: 12px;
-    font-weight: 600;
+    padding: 8px 4px;
+    border-radius: 8px;
+    border: 1px solid var(--border-thin);
+    font-size: 11px;
+    font-weight: 700;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 5px;
-    transition: transform 0.1s;
+    gap: 4px;
+    color: var(--text-secondary);
+    background: rgba(255,255,255,0.02);
+    transition: var(--transition-fast);
 }
 
-.toolbar-btn:active {
-    transform: scale(0.96);
+.toolbar-btn svg {
+    width: 14px;
+    height: 14px;
 }
 
-.db-btn {
-    background: rgba(255,255,255,0.05);
-    color: #ccc;
-}
-
-.ai-btn {
-    background: linear-gradient(135deg, #0a84ff, #bf5af2);
+.toolbar-btn:hover {
     color: white;
-    border: none;
-}
-
-.scan-btn {
     background: rgba(255,255,255,0.05);
-    color: #ccc;
 }
 
-/* Alte Styles entfernen/überschreiben falls nötig */
-.search-input-group, .search-icon, .search-go-btn, .form-divider {
-    display: none;
+.toolbar-btn.ai-btn {
+    background: var(--accent-secondary);
+    color: white;
+    border: 1px solid var(--border-thin);
 }
 
-.amount-row {
+.toolbar-btn.ai-btn:hover {
+    border-color: var(--border-hover);
+}
+
+/* Suchergebnisse */
+.search-results {
+    max-height: 160px;
+    overflow-y: auto;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 10px;
+    margin-top: 12px;
+    border: 1px solid var(--border-thin);
+}
+
+.search-result-item {
     display: flex;
+    align-items: center;
     gap: 10px;
+    padding: 8px 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.search-result-img {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+}
+
+/* 12. DETAILS & FORM ELEMENTS */
+.manual-form-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.form-group label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    padding-left: 2px;
+}
+
+.form-group input, 
+.form-group select {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--border-thin);
+    color: white;
+    padding: 12px 14px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 500;
+    width: 100%;
+    box-sizing: border-box;
+    transition: var(--transition-fast);
+}
+
+.form-group input:focus, 
+.form-group select:focus {
+    outline: none;
+    border-color: var(--border-focus);
 }
 
 .amount-row input {
-    flex: 1;
-    min-width: 0; /* WICHTIG: Erlaubt dem Feld zu schrumpfen, verhindert Overflow */
-    width: 100%;
-    font-size: 26px; /* Groß, aber passt besser auf Mobile */
-    padding: 15px 10px;
-    font-weight: bold;
-    text-align: center;
-    background: rgba(255,255,255,0.08); /* Leicht hervorheben */
-    border-radius: 14px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
 }
 
 .small-select {
-    width: 90px !important; /* Etwas kompakter */
-    flex: 0 0 90px;
-    text-align: center;
-    padding: 0 5px;
-    font-size: 16px;
-    font-weight: 600;
-    background: rgba(255,255,255,0.1);
+    width: 80px !important;
+    padding: 12px 6px !important;
 }
 
-/* Quick Amount Buttons (Chips) */
+/* Chips für Mengen-Schnellwahl */
 .quick-amounts {
     display: flex;
-    gap: 8px;
-    margin-top: 12px;
+    gap: 6px;
+    margin-top: 2px;
 }
 
 .quick-amt-btn {
     flex: 1;
-    padding: 10px 5px;
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 10px;
-    color: #ccc;
-    font-size: 13px;
-    font-weight: 500;
+    padding: 6px 2px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border-thin);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: var(--transition-fast);
 }
 
-.quick-amt-btn:active {
-    background: rgba(255,255,255,0.2);
-    transform: scale(0.95);
+.quick-amt-btn:hover {
+    color: white;
+    background: rgba(255,255,255,0.05);
 }
 
-.manual-form-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.form-group label {
-    display: block;
-    font-size: 12px;
-    color: #888;
-    margin-bottom: 5px;
-    margin-left: 5px;
-}
-
-.input-with-unit {
-    position: relative;
-}
-
-.input-with-unit input {
-    padding-right: 50px;
-}
-
-.input-with-unit span {
-    position: absolute;
-    right: 15px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #666;
-    font-size: 14px;
-    font-weight: 500;
-}
-
-.macros-row {
+/* Makronährstoffe Eingabe Zeile (Flach & dezent) */
+.macro-inputs-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-top: 4px;
 }
 
 .macro-input {
-    background: rgba(255,255,255,0.03);
-    border-radius: 12px;
-    padding: 10px;
+    background: rgba(255, 255, 255, 0.01);
+    border: 1px solid var(--border-thin);
+    border-radius: 10px;
+    padding: 8px 2px;
     text-align: center;
-    border: 1px solid transparent;
-    transition: border-color 0.2s;
 }
 
 .macro-input label {
-    font-size: 11px;
-    margin-bottom: 5px;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
     display: block;
-    color: #aaa;
+    margin-bottom: 2px;
+    color: var(--text-secondary) !important; /* Kein Bunt-Verweis im Label */
 }
 
 .macro-input input {
@@ -776,616 +1065,425 @@ input[type="file"] {
     text-align: center;
     background: transparent !important;
     border: none !important;
-    padding: 5px 0 !important;
-    font-size: 16px !important;
-    font-weight: bold;
-    box-shadow: none !important;
+    padding: 2px 0 !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    color: white !important; /* Weiß statt neon-bunt */
+    font-family: 'Outfit', sans-serif;
+    outline: none !important;
 }
 
-/* Profil Styles */
-.profile-section {
-    margin-bottom: 15px;
+.macro-input.calories { border-color: var(--border-thin); }
+.macro-input.protein { border-color: var(--border-thin); }
+.macro-input.fat { border-color: var(--border-thin); }
+.macro-input.carbs { border-color: var(--border-thin); }
+
+/* 13. INTERAKTIVE KI-ZUTATENSLIDER (SMART Baukasten) */
+.slider-ingredient-box {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--border-thin);
+    border-radius: 14px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
 }
 
-.section-title {
-    color: #888;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 10px;
-    margin-top: 0;
+.slider-ing-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-.profile-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-}
-
-.macro-input.calories { border-color: rgba(191, 90, 242, 0.3); }
-.macro-input.calories input { color: #bf5af2; }
-.macro-input.calories label { color: #bf5af2; }
-
-.macro-input.protein { border-color: rgba(52, 152, 219, 0.3); }
-.macro-input.protein input { color: #3498db; }
-.macro-input.protein label { color: #3498db; }
-
-.macro-input.fat { border-color: rgba(241, 196, 15, 0.3); }
-.macro-input.fat input { color: #f1c40f; }
-.macro-input.fat label { color: #f1c40f; }
-
-.macro-input.carbs { border-color: rgba(46, 204, 113, 0.3); }
-.macro-input.carbs input { color: #2ecc71; }
-.macro-input.carbs label { color: #2ecc71; }
-
-.styled-select {
-    width: 100%;
-    padding: 12px;
-    background: rgba(0,0,0,0.3);
-    border: 1px solid rgba(255,255,255,0.1);
-    color: white;
-    border-radius: 12px;
-    font-size: 14px;
-    appearance: none; /* Entfernt Standard-Pfeil */
-    box-sizing: border-box;
-}
-
-/* Neue Info Box (versteckt) */
-.info-box {
-    background: rgba(10, 132, 255, 0.1);
-    border: 1px solid rgba(10, 132, 255, 0.2);
-    padding: 15px;
-    border-radius: 12px;
-    margin-bottom: 15px;
-    animation: fadeIn 0.3s ease;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-5px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* Scanner Video Vollbild erzwingen */
-#reader video {
-    object-fit: cover !important;
-    width: 100% !important;
-    height: 100% !important;
-    border-radius: 0 !important;
-}
-
-.primary-btn {
-    background: linear-gradient(135deg, #0a84ff, #bf5af2);
-    color: white;
-    border: none;
-    padding: 15px;
-    border-radius: 12px;
-    font-size: 16px;
+.slider-ing-title {
     font-weight: 600;
-    cursor: pointer;
+    font-size: 13px;
 }
 
-.progress-wrapper {
-    margin-top: 10px;
-}
-
-.progress-label {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 5px;
-    font-weight: bold;
-    font-size: 14px;
-}
-
-.progress-bar {
-    height: 10px;
-    background-color: #333;
-    border-radius: 5px;
-    overflow: hidden;
-}
-
-.progress-bar > div {
-    height: 100%;
-    background-color: #28a745; /* Grün */
-    transition: width 0.5s ease-in-out;
-}
-
-/* Styles für die Historie */
-.history-entry {
-    background: #0a0a0a;
-    border: 1px solid #1a1a1a;
-    border-radius: 18px;
-    padding: 20px;
-    margin-bottom: 20px;
-}
-
-.history-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-    border-bottom: 1px solid #222;
-    padding-bottom: 15px;
-    cursor: pointer; /* Zeigt an, dass man klicken kann */
-}
-
-.history-header h4 {
-    margin: 0;
-    color: white;
-    word-wrap: break-word;
-}
-
-.header-left {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex: 1;
-    min-width: 0; /* Wichtig: Erlaubt dem Flex-Item kleiner zu werden als der Inhalt */
-    margin-right: 10px;
-}
-
-.header-right {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-shrink: 0;
-}
-
-.ingredient-row {
-    display: grid;
-    /* Spalten: Name (Rest) | Input (60px) | Einheit (20px) | Kcal (70px) | Löschen (30px) */
-    grid-template-columns: 1fr 60px 20px 70px 30px;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 12px;
-    font-size: 14px;
-    color: #888;
-    border-bottom: 1px solid #1a1a1a; /* Zarte Trennlinie für Tabellen-Look */
-    padding-bottom: 8px;
-}
-
-.ingredient-row:last-child {
-    border-bottom: none;
-    margin-bottom: 0;
-    padding-bottom: 0;
-}
-
-.ing-name {
-    word-wrap: break-word;
-    min-width: 0;
-    padding-right: 5px;
-}
-
-.ing-unit {
-    color: #555;
+.slider-ing-badge {
+    font-family: 'Outfit', sans-serif;
     font-size: 12px;
-}
-
-.ing-kcal {
-    text-align: right;
-    color: #aaa;
-    font-variant-numeric: tabular-nums; /* Sorgt dafür, dass Zahlen untereinander stehen */
-}
-
-.weight-input {
-    width: 100%;
-    padding: 8px 4px;
-    border: 1px solid #333;
-    background: #111;
-    color: white;
-    border-radius: 8px;
-    text-align: center;
-    font-size: 14px;
-}
-
-.toggle-icon {
-    transition: transform 0.3s ease;
-    display: flex;
-    align-items: center;
-    color: #666;
-}
-
-.delete-ing-btn {
-    background: none;
-    border: none;
-    color: #444;
-    cursor: pointer;
-    padding: 5px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    transition: all 0.2s;
-    justify-self: end;
-}
-
-.delete-ing-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: #ff453a;
-}
-
-.delete-btn {
-    background: none;
-    border: none;
-    color: #ff453a;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 5px;
-}
-
-/* Styles für Makro-Nährstoffe (Runde Balken) */
-.macro-stats {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 10px 0;
-    margin-bottom: 10px;
-}
-
-.macro-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    font-size: 12px;
-    color: #666;
-    font-weight: 500;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-}
-
-.macro-row {
-    display: flex;
-    justify-content: space-around;
-    width: 100%;
-    margin-top: 25px;
-}
-
-.radial-chart {
-    width: 60px;
-    height: 60px;
-    position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 4px;
-}
-
-/* Größere Version für die Hauptanzeige */
-.radial-chart.large {
-    width: 80px;
-    height: 80px;
-}
-
-/* Extra große Version für Kcal (Hauptanzeige) */
-.radial-chart.xlarge {
-    width: 140px;
-    height: 140px;
-}
-
-/* SVG Styles für Premium Look */
-.radial-chart svg {
-    width: 100%;
-    height: 100%;
-    transform: rotate(0deg);
-    overflow: visible; /* Wichtig für den Glow-Effekt, der über den Rand geht */
-}
-
-.chart-bg {
-    fill: none;
-    stroke: #1a1a1a; /* Sehr dunkler Track */
-    stroke-width: 2.5;
-}
-
-.chart-stroke {
-    fill: none;
-    stroke-width: 2.5;
-    stroke-linecap: round; /* Abgerundete Enden = Premium */
-    transition: stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.radial-chart span {
-    position: absolute;
-    z-index: 1;
-    font-weight: bold;
-    font-size: 12px;
-    color: white;
-    text-shadow: 0 2px 10px rgba(0,0,0,0.5);
-}
-
-.radial-chart.xlarge span {
-    font-size: 28px;
     font-weight: 700;
-    letter-spacing: -1px;
-}
-
-/* SVG Icons Helper */
-.icon-svg {
-    width: 20px;
-    height: 20px;
-    fill: currentColor;
-}
-
-.icon-small {
-    width: 16px;
-    height: 16px;
-}
-
-h3 {
     color: white;
-    font-weight: 600;
-    margin-top: 0;
 }
 
-/* Lade-Overlay */
-.loading-overlay {
+.slider-ing-badge span {
+    color: var(--text-muted);
+    font-size: 9px;
+}
+
+/* Custom Schieberegler (Dezent grau statt lila) */
+.slider-range-input {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.06);
+    outline: none;
+    margin: 6px 0;
+}
+
+.slider-range-input::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.5);
+}
+
+.slider-range-input::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.5);
+}
+
+.slider-ing-macros {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--text-secondary);
+}
+
+/* 14. MODERNE BUTTONS (FLACH & MONOCHROM) */
+.primary-btn {
+    background: var(--accent-primary);
+    color: #000000;
+    border: none;
+    padding: 14px 18px;
+    border-radius: 14px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: var(--transition-fast);
+}
+
+.primary-btn:hover {
+    background: rgba(255,255,255,0.9);
+}
+
+.primary-btn:active {
+    transform: scale(0.98);
+}
+
+.secondary-btn {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-thin);
+    color: white;
+    padding: 12px 18px;
+    border-radius: 14px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: var(--transition-fast);
+}
+
+.secondary-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--border-hover);
+}
+
+/* 15. MODALS & POPUPS */
+.modal-overlay-bg {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.85);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    z-index: 3000;
+    display: none;
+}
+
+.manual-entry-box {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: calc(100% - 40px);
+    max-width: 380px;
+    z-index: 3500;
+    background: #121214;
+    border: 1px solid var(--border-thin);
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    max-height: 80vh;
+    overflow-y: auto;
+    scrollbar-width: none;
+}
+
+/* Barcode-Scanner Modal (Schlichte Linien, kein Neon-Lila) */
+#scannerModal {
+    width: 100vw;
+    height: 100vh;
+    max-width: none;
+    max-height: none;
+    border-radius: 0;
+    background: #000;
+    top: 0; left: 0;
+    transform: none;
+    padding: 0;
+    border: none;
+    z-index: 4000;
+}
+
+.scanner-box {
+    width: 220px;
+    height: 220px;
+    position: relative;
+    box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.7);
+    border-radius: 16px;
+}
+
+.scanner-corner {
+    position: absolute;
+    width: 28px;
+    height: 28px;
+    border-color: white;
+    border-style: solid;
+    border-width: 3px;
+}
+
+.top-left { top: 0; left: 0; border-right: none; border-bottom: none; border-top-left-radius: 14px; }
+.top-right { top: 0; right: 0; border-left: none; border-bottom: none; border-top-right-radius: 14px; }
+.bottom-left { bottom: 0; left: 0; border-right: none; border-top: none; border-bottom-left-radius: 14px; }
+.bottom-right { bottom: 0; right: 0; border-left: none; border-top: none; border-bottom-right-radius: 14px; }
+
+.scanner-line {
+    width: 100%;
+    height: 1.5px;
+    background: white;
+    position: absolute;
+    top: 10%;
+    opacity: 0.5;
+    animation: scanMove 2.2s infinite ease-in-out;
+}
+
+@keyframes scanMove {
+    0% { top: 10%; }
+    50% { top: 90%; }
+    100% { top: 10%; }
+}
+
+/* 16. TOAST BENACHRICHTIGUNGEN */
+#toast-container {
+    position: fixed;
+    bottom: 90px;
+    left: 50%;
+    transform: translateX(-50%);
     z-index: 5000;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    align-items: center;
+    gap: 8px;
+    width: calc(100% - 40px);
+    max-width: 340px;
+    pointer-events: none;
+}
+
+.toast {
+    background: #121214;
     color: white;
-    font-weight: 500;
-    letter-spacing: 0.5px;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-/* --- SPLASH SCREEN STYLES --- */
-.splash-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-}
-
-.splash-logo {
-    width: 100px;
-    height: 100px;
-    margin-bottom: 25px;
-    animation: pulseLogo 2.5s infinite ease-in-out;
-    filter: drop-shadow(0 0 30px rgba(191, 90, 242, 0.4)); /* Lila Glow passend zur App */
-}
-
-.splash-text {
-    color: #fff;
-    font-size: 16px;
-    letter-spacing: 4px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--border-thin);
+    font-size: 12px;
     font-weight: 600;
-    opacity: 0;
-    animation: fadeIn 1s ease-out 0.3s forwards;
-}
-
-@keyframes pulseLogo {
-    0% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.08); opacity: 0.9; }
-    100% { transform: scale(1); opacity: 1; }
-}
-
-/* --- AI LOADING ANIMATION (Schneller) --- */
-.ai-loading-logo {
-    width: 80px;
-    height: 80px;
-    margin-bottom: 20px;
-    /* Schnelles Pulsieren (0.6s) wirkt wie "Rechnen" */
-    animation: aiProcessing 0.6s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-@keyframes aiProcessing {
-    0% { 
-        transform: scale(0.95); 
-        filter: drop-shadow(0 0 15px rgba(10, 132, 255, 0.6)); /* Start: Blau */
-    }
-    100% { 
-        transform: scale(1.15); 
-        filter: drop-shadow(0 0 35px rgba(191, 90, 242, 0.9)); /* Ende: Lila Glow */
-    }
-}
-
-/* --- COOKIE BANNER --- */
-.cookie-banner {
-    position: fixed;
-    bottom: 0; left: 0; width: 100%;
-    background: rgba(28, 28, 30, 0.95);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 20px;
-    box-sizing: border-box;
-    z-index: 6000;
     display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 15px;
-    animation: slideUp 0.5s ease cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.cookie-buttons {
-    display: flex;
+    align-items: center;
     gap: 10px;
+    animation: toastSlideUp 0.3s ease-out forwards;
+    pointer-events: auto;
 }
 
-.cookie-btn-primary {
-    background: #fff;
-    color: #000;
-    border: none;
-    padding: 10px 16px;
-    border-radius: 12px;
-    font-weight: bold;
-    font-size: 13px;
-    cursor: pointer;
-    flex: 1;
+.toast.success { border-left: 3px solid var(--accent-green); }
+.toast.error { border-left: 3px solid var(--accent-red); }
+.toast.info { border-left: 3px solid var(--text-secondary); }
+
+.toast.fade-out {
+    animation: toastFadeOut 0.25s ease forwards;
 }
 
-.cookie-btn-secondary {
-    background: transparent;
-    color: #aaa;
-    border: 1px solid #444;
-    padding: 10px 16px;
-    border-radius: 12px;
-    font-size: 13px;
-    cursor: pointer;
-    flex: 1;
+@keyframes toastSlideUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-/* Disclaimer Text */
-.disclaimer-text {
-    text-align: center;
-    font-size: 11px;
-    color: #666;
-    margin-top: 30px;
-    padding: 0 10px;
-    opacity: 0.7;
+@keyframes toastFadeOut {
+    to { opacity: 0; transform: translateY(-5px); }
 }
 
-/* Suchergebnisse im manuellen Modus */
-.search-results {
-    max-height: 150px;
-    overflow-y: auto;
-    margin-bottom: 15px;
-    background: rgba(0,0,0,0.2);
-    border-radius: 12px;
-    display: none; /* Standardmäßig versteckt */
-}
-
-.search-result-item {
-    padding: 10px 15px;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-    cursor: pointer;
-    font-size: 14px;
-}
-
-/* Flexbox für Bild + Text */
-.search-result-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.search-result-img {
-    width: 40px;
-    height: 40px;
-    border-radius: 8px;
-    object-fit: cover;
-    background: rgba(255,255,255,0.05);
-    flex-shrink: 0;
-}
-
-.search-result-img.placeholder {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-}
-
-.search-result-item:hover {
-    background: rgba(255,255,255,0.1);
-}
-
-/* Rezepte Liste */
+/* 17. REZEPTE & LISTEN */
 .recipes-list {
-    max-height: 60vh;
-    overflow-y: auto;
     display: flex;
     flex-direction: column;
     gap: 10px;
 }
 
 .recipe-item {
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 12px;
-    padding: 15px;
+    background: rgba(255, 255, 255, 0.01);
+    border: 1px solid var(--border-thin);
+    border-radius: 14px;
+    padding: 14px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: var(--transition-fast);
 }
 
 .recipe-item:hover {
-    background: rgba(255,255,255,0.1);
+    background: rgba(255, 255, 255, 0.03);
+    border-color: var(--border-hover);
 }
 
-/* Toast Notifications */
-#toast-container {
+/* 18. CONFETTI FULLSCREEN CANVAS */
+#confetti-canvas {
     position: fixed;
-    bottom: 30px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 10000;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    z-index: 9999;
+    pointer-events: none;
+    display: block;
+}
+
+/* 21. LOGIN & AUTH SCREEN (SCHLICHT) */
+.auth-container {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: #09090b;
+    z-index: 3000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.auth-box {
+    width: 100%; 
+    max-width: 340px;
+    display: flex; 
+    flex-direction: column; 
+    gap: 14px;
+    text-align: center;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-thin);
+    border-radius: 24px;
+    padding: 35px 25px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+.auth-logo {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 10px auto;
+    display: block;
+}
+
+.auth-box h2 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: #fff;
+    margin-bottom: 3px;
+}
+
+.auth-box input {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--border-thin);
+    color: #fff;
+    padding: 14px;
+    border-radius: 12px;
+    font-size: 14px;
+    transition: var(--transition-fast);
+    text-align: center;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.auth-box input::placeholder {
+    color: var(--text-muted);
+}
+
+.auth-box input:focus {
+    outline: none;
+    border-color: var(--border-focus);
+}
+
+.auth-box .primary-btn {
+    background: white;
+    color: black;
+    border: none;
+    font-weight: 700;
+    margin-top: 8px;
+}
+
+.auth-box .secondary-btn {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-thin);
+    color: var(--text-secondary);
+}
+
+.auth-box .secondary-btn:hover {
+    border-color: var(--border-hover);
+    color: white;
+}
+
+/* 22. LOADING OVERLAYS */
+.loading-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: #09090b;
+    z-index: 9999;
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    width: 90%;
-    max-width: 400px;
-    pointer-events: none; /* Klicks gehen durch den Container durch */
-}
-
-.toast {
-    background: rgba(30, 30, 32, 0.95);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
-    color: white;
-    padding: 16px 20px;
-    border-radius: 16px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    border: 1px solid rgba(255,255,255,0.1);
-    font-size: 14px;
-    font-weight: 500;
-    display: flex;
+    justify-content: center;
     align-items: center;
-    gap: 12px;
-    animation: toastSlideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    pointer-events: auto;
+    color: white;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    pointer-events: all;
+    transition: opacity 0.4s ease-out;
 }
 
-.toast.success { border-left: 4px solid #30d158; }
-.toast.error { border-left: 4px solid #ff453a; }
-.toast.info { border-left: 4px solid #bf5af2; }
-
-.toast.fade-out {
-    animation: toastFadeOut 0.3s forwards;
+.fade-out-screen {
+    opacity: 0;
+    pointer-events: none;
 }
 
-@keyframes toastSlideUp {
-    from { opacity: 0; transform: translateY(20px) scale(0.95); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-@keyframes toastFadeOut {
-    to { opacity: 0; transform: translateY(-10px) scale(0.95); }
-}
-
-@keyframes slideUp { 
-    from { transform: translateY(100%); } 
-    to { transform: translateY(0); } 
-}
-
-/* Toggle Switch Styles */
+/* 23. TOGGLE SWITCH & HYBRID STYLE */
 .toggle-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: rgba(255,255,255,0.05);
-    padding: 12px 15px;
+    background: rgba(255,255,255,0.02);
+    padding: 10px 14px;
     border-radius: 12px;
-    margin-bottom: 15px;
-    border: 1px solid rgba(255,255,255,0.1);
+    margin-bottom: 12px;
+    border: 1px solid var(--border-thin);
 }
 
 .switch {
     position: relative;
     display: inline-block;
-    width: 46px;
-    height: 26px;
+    width: 44px;
+    height: 24px;
 }
 
 .switch input { opacity: 0; width: 0; height: 0; }
@@ -1394,98 +1492,51 @@ h3 {
     position: absolute;
     cursor: pointer;
     top: 0; left: 0; right: 0; bottom: 0;
-    background-color: #333;
-    transition: .4s;
+    background-color: rgba(255,255,255,0.06);
+    border: 1px solid var(--border-thin);
+    transition: .2s;
     border-radius: 34px;
 }
 
 .slider:before {
     position: absolute;
     content: "";
-    height: 20px; width: 20px;
+    height: 16px; width: 16px;
     left: 3px; bottom: 3px;
     background-color: white;
-    transition: .4s;
+    transition: .2s;
     border-radius: 50%;
 }
 
-input:checked + .slider { background-color: #bf5af2; }
-input:checked + .slider:before { transform: translateX(20px); }
-
-/* --- SCANNER OVERLAY STYLES --- */
-.scanner-overlay {
-    position: absolute;
-    top: 0; left: 0; width: 100%; height: 100%;
-    pointer-events: none; /* Klicks gehen durch (wichtig für Fokus etc.) */
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    z-index: 5;
+input:checked + .slider { 
+    background-color: white; 
+    border-color: white;
+}
+input:checked + .slider:before { 
+    transform: translateX(20px); 
+    background-color: black;
 }
 
-.scanner-box {
-    width: 260px;
-    height: 260px;
-    position: relative;
-    box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.6); /* Dunkelt den Bereich außerhalb ab */
-    border-radius: 20px;
+/* 24. UTILITIES & HELPER CLASSES */
+.hidden {
+    display: none !important;
 }
 
-.scanner-corner {
-    position: absolute;
-    width: 40px; height: 40px;
-    border-color: #bf5af2;
-    border-style: solid;
-    border-width: 4px;
-    border-radius: 4px;
-    box-shadow: 0 0 10px rgba(191, 90, 242, 0.5);
+/* Deaktiviere leuchtendes Logo-Pulsieren */
+.splash-logo {
+    width: 80px;
+    height: 80px;
 }
 
-.top-left { top: 0; left: 0; border-right: none; border-bottom: none; border-top-left-radius: 20px; }
-.top-right { top: 0; right: 0; border-left: none; border-bottom: none; border-top-right-radius: 20px; }
-.bottom-left { bottom: 0; left: 0; border-right: none; border-top: none; border-bottom-left-radius: 20px; }
-.bottom-right { bottom: 0; right: 0; border-left: none; border-top: none; border-bottom-right-radius: 20px; }
-
-.scanner-line {
-    width: 100%;
-    height: 2px;
-    background: #bf5af2;
-    position: absolute;
-    top: 50%;
-    box-shadow: 0 0 15px #bf5af2;
-    animation: scan-move 2s infinite ease-in-out;
+.ai-loading-logo {
+    width: 64px;
+    height: 64px;
     opacity: 0.8;
 }
 
-@keyframes scan-move {
-    0% { top: 10%; opacity: 0; }
-    50% { opacity: 1; }
-    100% { top: 90%; opacity: 0; }
-}
-
-/* Rotations-Animation für Lade-Icons */
-.spin-anim {
-    animation: spin 1s linear infinite;
-}
-
-/* Fade Out Animation für den Lade-Screen */
-.fade-out-screen {
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.5s ease-out;
-}
-
-/* Google reCAPTCHA Badge ausblenden (dafür Hinweis im Impressum) */
-.grecaptcha-badge {
-    visibility: hidden !important;
-}
-
-
-/* Snack hinzufügen Button wieder weiß */
-#toggleManualEntryBtn {
-    background: #ffffff;
-    color: #000000;
-    border: none;
+.splash-text {
+    color: var(--text-primary);
+    font-size: 14px;
+    letter-spacing: 5px;
     font-weight: 700;
 }

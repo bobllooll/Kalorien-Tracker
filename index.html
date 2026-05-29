@@ -3,28 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Kalorien Schätzer AI</title>
+    <title>NutriScan AI - Premium Kalorien Tracker</title>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
     <link rel="icon" href="icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="icon.svg">
-    <meta name="theme-color" content="#000000">
+    <meta name="theme-color" content="#09090b">
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <script src="https://www.google.com/recaptcha/api.js?render=6LdGe08sAAAAAPsA5RKV2qXbUWFScBJhUQZRS-0K"></script>
     <!-- Error Handler: Falls Schul-WLAN Skripte blockiert -->
     <script>
         window.addEventListener('error', function(e) {
-            // Prüft, ob das Haupt-Skript app.js nicht geladen werden konnte
             if (e.target.tagName === 'SCRIPT' && e.target.src && e.target.src.includes('app.js')) {
                 const loader = document.getElementById('appLoadingScreen');
                 if (loader) {
                     loader.innerHTML = `
-                        <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; padding:20px; text-align:center; color:white;">
-                            <div style="font-size:40px; margin-bottom:20px;">🛡️</div>
-                            <h3>Verbindung blockiert</h3>
-                            <p style="color:#ccc; margin-bottom:20px; line-height:1.5;">Das Netzwerk (z.B. Schul-WLAN) blockiert die App-Dateien.<br>Versuche die Standard-Adresse:</p>
-                            <a href="https://kalorien-tracker.pages.dev" style="background:#0a84ff; color:white; text-decoration:none; padding:12px 24px; border-radius:12px; font-weight:bold;">Zur .pages.dev Version</a>
-                            <p style="font-size:12px; color:#666; margin-top:20px;">Tipp: Installiere die App zu Hause, dann geht sie auch hier.</p>
+                        <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; padding:20px; text-align:center; color:white; background:#05030a;">
+                            <div style="font-size:48px; margin-bottom:20px; filter:drop-shadow(0 0 15px #ff453a);">🛡️</div>
+                            <h3 style="font-family:'Outfit',sans-serif;font-size:22px;">Verbindung blockiert</h3>
+                            <p style="color:#a39eb2; margin-bottom:24px; line-height:1.6; font-size:14px;">Dein Netzwerk (z.B. Schul-WLAN) blockiert die App-Dateien.<br>Versuche unsere Ausweich-Adresse:</p>
+                            <a href="https://kalorien-tracker.pages.dev" style="background:linear-gradient(135deg,#0a84ff,#bf5af2); color:white; text-decoration:none; padding:14px 28px; border-radius:16px; font-weight:bold; font-size:15px; box-shadow:0 6px 20px rgba(191,90,242,0.3);">Zur Hauptversion wechseln</a>
+                            <p style="font-size:11px; color:#5e5968; margin-top:24px;">Tipp: Installiere die App zu Hause auf deinem Homescreen, dann funktioniert sie offline & überall.</p>
                         </div>
                     `;
                 }
@@ -33,308 +32,452 @@
     </script>
 </head>
 <body>
+    <!-- Confetti Canvas für Feierlichkeiten -->
+    <canvas id="confetti-canvas"></canvas>
+
     <div class="app-container">
         <!-- Globaler Gradient für SVGs -->
         <svg width="0" height="0" style="position: absolute;">
             <defs>
                 <linearGradient id="brandGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stop-color="#0a84ff" />
-                    <stop offset="100%" stop-color="#bf5af2" />
+                    <stop offset="0%" stop-color="#ffffff" />
+                    <stop offset="100%" stop-color="#a1a1aa" />
+                </linearGradient>
+                <linearGradient id="waterGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stop-color="#3b82f6" />
+                    <stop offset="100%" stop-color="#1d4ed8" />
                 </linearGradient>
             </defs>
         </svg>
 
-        <!-- Initialer Lade-Screen (Verdeckt alles beim Start) -->
-        <div id="appLoadingScreen" class="loading-overlay" style="z-index: 9999; background: #000;">
+        <!-- Initialer Lade-Screen (Splash) -->
+        <div id="appLoadingScreen" class="loading-overlay" style="z-index: 9999; background: #09090b;">
             <div class="splash-content">
                 <img src="icon.svg" class="splash-logo" alt="NutriScan AI">
-                <div class="splash-text">NUTRISCAN AI</div>
+                <div class="splash-text" style="font-family:'Outfit',sans-serif; font-weight:800; font-size:18px; letter-spacing:6px; margin-top:10px;">NUTRISCAN AI</div>
             </div>
         </div>
 
-        <!-- Login Screen -->
+        <!-- Login / Registrierungs-Screen -->
         <div id="auth-screen" class="auth-container">
             <div class="auth-box">
                 <img src="icon.svg" class="auth-logo" alt="NutriScan AI">
-                <h2>Willkommen</h2>
-                <p style="color: #888; margin-bottom: 20px;">Bitte melde dich an, um deine Daten zu speichern.</p>
+                <h2 style="font-family:'Outfit',sans-serif; font-weight:800;">Willkommen</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 20px; font-size:13px; line-height:1.5;">Bitte melde dich an, um deine Ernährungsdaten sicher in der Cloud zu synchronisieren.</p>
                 <input type="email" id="authEmail" placeholder="E-Mail Adresse" autocomplete="username" inputmode="email">
                 <input type="password" id="authPassword" placeholder="Passwort" autocomplete="current-password">
-                <button id="loginBtn" class="primary-btn">Einloggen</button>
-                <button id="registerBtn" class="secondary-btn">Registrieren</button>
-                <button id="forgotPasswordBtn" style="background:none; border:none; color:#888; font-size:12px; margin-top:15px; cursor:pointer; text-decoration:underline;">Passwort vergessen?</button>
-                <p id="authError" style="color: #ff453a; margin-top: 10px; font-size: 14px;"></p>
+                <button id="loginBtn" class="primary-btn" style="margin-top: 10px;">Einloggen</button>
+                <button id="registerBtn" class="secondary-btn">Konto registrieren</button>
+                <button id="forgotPasswordBtn" style="background:none; border:none; color:var(--text-muted); font-size:12px; margin-top:10px; cursor:pointer; text-decoration:underline; font-weight:600;">Passwort vergessen?</button>
+                <p id="authError" style="color: var(--accent-red); margin-top: 15px; font-size: 13px; font-weight:600; line-height:1.4;"></p>
             </div>
         </div>
 
+        <!-- Hauptinhalt der App -->
         <div id="app-content" class="hidden">
-        <header>
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h1>AI Kalorien Scanner</h1>
-                <div style="display: flex; gap: 10px; align-items: center;">
-                    <button id="installAppBtn" class="icon-btn hidden" title="App installieren">
-                        <svg class="icon-svg" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-                    </button>
-                    <button id="openProfileBtn" class="icon-btn">👤</button>
-                </div>
-            </div>
-        </header>
-
-        <main>
-            <div class="day-nav">
-                <button id="prevDayBtn" class="nav-btn">&lt;</button>
-                <h2 id="currentDateDisplay">Heute</h2>
-                <button id="nextDayBtn" class="nav-btn" disabled>&gt;</button>
-            </div>
-
-            <!-- Neuer Bereich: Tagesstatistik -->
-            <div id="stats-container" class="stats-box">
-                <h3>Dein Tagesbedarf</h3>
-                <div id="dailyStats" class="macro-stats"></div>
-            </div>
-
-            <!-- Neuer Bereich: Wasser Tracker -->
-            <div class="stats-box water-box">
-                <div class="water-info">
-                    <h3>Wasser</h3>
-                    <p><span id="waterCurrent">0</span> / <span id="waterGoal">2500</span> ml</p>
-                    <div class="water-controls">
-                        <button id="removeWaterBtn" class="water-btn">-</button>
-                        <button id="addWaterBtn" class="water-btn">+</button>
-                    </div>
-                </div>
-                <div class="bottle-container">
-                    <div class="bottle">
-                        <div class="water-fill" id="waterFill"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Neuer Bereich: Historie & Bearbeitung -->
-            <div id="historyList"></div>
-
-            <!-- Manueller Eintrag -->
-            <div class="manual-entry-container">
-                <button id="toggleManualEntryBtn" class="secondary-btn">Snack hinzufügen +</button>
-                <div id="manualEntryForm" class="manual-entry-box hidden">
-                    <div class="manual-entry-header">
-                        <h3>Eintrag hinzufügen</h3>
-                        <button id="closeManualEntryBtn" class="close-modal-btn">
-                            <svg class="icon-svg" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+            <!-- Universal Header -->
+            <header>
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                    <h1>NutriScan AI</h1>
+                    <div class="header-actions">
+                        <button id="installAppBtn" class="icon-btn hidden" title="App installieren">
+                            <svg class="icon-svg" viewBox="0 0 24 24" style="stroke: currentColor; fill: none; stroke-width: 2.2;"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
                         </button>
+                        <button id="openProfileBtn" class="icon-btn" style="font-family:'Outfit',sans-serif; font-weight:800; font-size:13px; border-color: rgba(255,255,255,0.08);">👤</button>
                     </div>
-                    
-                    <!-- Universal Suche -->
+                </div>
+            </header>
+
+            <main>
+                <!-- TAB 1: DASHBOARD (HEUTE) -->
+                <div id="tab-dashboard" class="tab-content active">
+                    <!-- Tages-Navigation -->
+                    <div class="day-nav">
+                        <button id="prevDayBtn" class="nav-btn">&lt;</button>
+                        <h2 id="currentDateDisplay">Heute</h2>
+                        <button id="nextDayBtn" class="nav-btn" disabled>&gt;</button>
+                    </div>
+
+                    <!-- Streak Badge (Gamification) -->
+                    <div style="display: flex; justify-content: center; width: 100%;">
+                        <div id="streakBadge" class="streak-badge">
+                            🔥 <span id="streakCountDisplay">0</span> Tage Streak
+                        </div>
+                    </div>
+
+                    <!-- Tages-Statistiken Rings -->
+                    <div id="stats-container" class="glass-card">
+                        <h3 style="font-family:'Outfit',sans-serif; font-size:16px; margin: 0 0 20px 0; text-align:center;">Dein Tagesbedarf</h3>
+                        <div id="dailyStats" class="macro-stats"></div>
+                    </div>
+
+                    <!-- NEU: Wöchentliche Kalorienübersicht (Balkenchart) -->
+                    <div id="weekChartContainer" class="glass-card week-chart-container">
+                        <h3>Wochenübersicht</h3>
+                        <div class="week-bars">
+                            <div class="chart-limit-line" id="chartLimitLine"></div>
+                            <!-- Wochentage werden dynamisch gerendert -->
+                            <div class="week-bar-wrapper" id="bar-day-0"><div class="week-bar" id="bar-fill-0"></div><span class="week-day-label">Mo</span></div>
+                            <div class="week-bar-wrapper" id="bar-day-1"><div class="week-bar" id="bar-fill-1"></div><span class="week-day-label">Di</span></div>
+                            <div class="week-bar-wrapper" id="bar-day-2"><div class="week-bar" id="bar-fill-2"></div><span class="week-day-label">Mi</span></div>
+                            <div class="week-bar-wrapper" id="bar-day-3"><div class="week-bar" id="bar-fill-3"></div><span class="week-day-label">Do</span></div>
+                            <div class="week-bar-wrapper" id="bar-day-4"><div class="week-bar" id="bar-fill-4"></div><span class="week-day-label">Fr</span></div>
+                            <div class="week-bar-wrapper" id="bar-day-5"><div class="week-bar" id="bar-fill-5"></div><span class="week-day-label">Sa</span></div>
+                            <div class="week-bar-wrapper" id="bar-day-6"><div class="week-bar" id="bar-fill-6"></div><span class="week-day-label">So</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Wasser Tracker (Kapsel Fluid Look) -->
+                    <div class="glass-card water-box">
+                        <div class="water-info">
+                            <h3>Flüssigkeitsbedarf</h3>
+                            <div class="water-value">
+                                <span id="waterCurrent">0</span> / <span id="waterGoal">2500</span> <span>ml</span>
+                            </div>
+                        </div>
+                        <div class="water-widget-body">
+                            <div class="water-controls-layout">
+                                <div class="water-btn-row">
+                                    <button id="removeWaterBtn" class="water-action-btn" title="250ml entfernen" disabled>-</button>
+                                    <button id="addWaterBtn" class="water-action-btn" title="250ml hinzufügen">+</button>
+                                </div>
+                                <!-- Ergänzte Schnelltasten für Wasser-Widget Steigerung -->
+                                <div style="display: flex; gap: 5px;">
+                                    <button class="quick-amt-btn" style="flex:1; padding: 6px 2px; font-size:10px;" id="waterQuickAdd500">+500ml</button>
+                                    <button class="quick-amt-btn" style="flex:1; padding: 6px 2px; font-size:10px;" id="waterQuickAdd750">+750ml</button>
+                                </div>
+                            </div>
+                            <!-- Organische Glaskapsel -->
+                            <div class="water-capsule">
+                                <div class="fluid-water-container" id="waterFill">
+                                    <svg class="water-waves" viewBox="0 0 120 28">
+                                        <path class="water-wave-1" d="M0 15 Q 30 0, 60 15 T 120 15 L 120 28 L 0 28 Z"></path>
+                                        <path class="water-wave-2" d="M0 15 Q 30 30, 60 15 T 120 15 L 120 28 L 0 28 Z"></path>
+                                    </svg>
+                                    <div class="water-bubble" style="left: 15%; animation-duration: 3s; animation-delay: 0.5s; width: 6px; height: 6px;"></div>
+                                    <div class="water-bubble" style="left: 45%; animation-duration: 4s; animation-delay: 1.2s; width: 4px; height: 4px;"></div>
+                                    <div class="water-bubble" style="left: 75%; animation-duration: 3.5s; animation-delay: 0.1s; width: 5px; height: 5px;"></div>
+                                </div>
+                                <!-- Fallback für altes DOM Element -->
+                                <div id="bottleContainer" class="hidden"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- NEU: Quick Add Schnellwahl-Chips -->
+                    <div id="quickAddContainer" class="quick-add-container">
+                        <h3>Schnell hinzufügen</h3>
+                        <div class="quick-add-scroll" id="quickAddScroll">
+                            <!-- Wird dynamisch mit häufigen Einträgen befüllt -->
+                            <div class="quick-add-chip" data-name="Wasser" data-cal="0" data-p="0" data-f="0" data-c="0" data-type="water">
+                                <div class="quick-add-icon">💧</div>
+                                <div>
+                                    <div>Glas Wasser</div>
+                                    <div style="font-size:10px; color:var(--text-secondary);">250 ml</div>
+                                </div>
+                            </div>
+                            <div class="quick-add-chip" data-name="Kaffee schwarz" data-cal="2" data-p="0.2" data-f="0" data-c="0" data-type="food">
+                                <div class="quick-add-icon">☕</div>
+                                <div>
+                                    <div>Kaffee schwarz</div>
+                                    <div style="font-size:10px; color:var(--text-secondary);">2 kcal</div>
+                                </div>
+                            </div>
+                            <div class="quick-add-chip" data-name="Apfel" data-cal="75" data-p="0.4" data-f="0.2" data-c="18" data-type="food">
+                                <div class="quick-add-icon">🍎</div>
+                                <div>
+                                    <div>Apfel</div>
+                                    <div style="font-size:10px; color:var(--text-secondary);">75 kcal</div>
+                                </div>
+                            </div>
+                            <div class="quick-add-chip" data-name="Banane" data-cal="105" data-p="1.2" data-f="0.3" data-c="27" data-type="food">
+                                <div class="quick-add-icon">🍌</div>
+                                <div>
+                                    <div>Banane</div>
+                                    <div style="font-size:10px; color:var(--text-secondary);">105 kcal</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Snack hinzufügen Button -->
+                    <button id="toggleManualEntryBtn" class="dashboard-add-trigger">Snack hinzufügen +</button>
+
+                    <!-- Historie-Liste -->
+                    <div id="historyList"></div>
+
+                    <p class="disclaimer-text">⚠️ Hinweis: Nährwerte sind KI-Schätzungen und dienen zur Orientierung.</p>
+                </div>
+
+                <!-- TAB 2: KI SCAN & MANUELLE EINGABE (ADD) -->
+                <div id="tab-scan" class="tab-content">
+                    <!-- Suchcontainer -->
                     <div class="search-container">
-                        <input type="text" id="productSearchInput" class="main-search-input" placeholder="Produkt suchen oder beschreiben...">
-                        
+                        <h3 style="font-family:'Outfit',sans-serif; font-size:16px; margin:0 0 12px 0;">Suchen & Schätzen</h3>
+                        <input type="text" id="productSearchInput" class="main-search-input" placeholder="Gericht beschreiben oder Produkt suchen...">
                         <div class="search-toolbar">
-                            <button id="productSearchBtn" class="toolbar-btn db-btn">
-                                <svg class="icon-svg" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                            <button id="productSearchBtn" class="toolbar-btn">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 11A8 8 0 113 11a8 8 0 0116 0zM21 21l-4.35-4.35"/></svg>
                                 Datenbank
                             </button>
                             <button id="aiTextEstimateBtn" class="toolbar-btn ai-btn">
-                                <svg class="icon-svg" viewBox="0 0 24 24"><path d="M19 9l1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5zM19 15l-1.25 2.75L15 19l2.75 1.25L19 23l1.25-2.75L23 19l-2.75-1.25L19 15z"/></svg>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
                                 KI Schätzung
                             </button>
-                            <button id="scanInManualBtn" class="toolbar-btn scan-btn">
-                                <svg class="icon-svg" viewBox="0 0 24 24"><path d="M3 5h2V3c-1.1 0-2 .9-2 2zm0 8h2v-2H3v2zm4 8h2v-2H7v2zM3 9h2V7H3v2zm10-6h-2v2h2V3zm6 0v2h2c0-1.1-.9-2-2-2zM5 21v-2H3c0 1.1.9 2 2 2zm-2-4h2v-2H3v2zM9 3H7v2h2V3zm8 0h-2v2h2V3zm2 8h2v-2h-2v2zm0-4h2V5h-2v2zm0 12h2c0 1.1-.9 2-2 2v-2zm0-4h2v-2h-2v2zm-4 4h-2v2h2v-2zm0-4h-2v2h2v-2zm-4 4H7v2h2v-2z"/></svg>
+                            <button id="scanInManualBtn" class="toolbar-btn">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2M7 12h10"/></svg>
                                 Barcode
                             </button>
                         </div>
-                        
-                        <div style="font-size: 10px; color: #666; text-align: center; margin-bottom: 15px; margin-top: -10px;">
-                            ⚠️ KI-Werte sind Schätzungen. Bitte auf Plausibilität prüfen.
-                        </div>
-                        
                         <div id="searchResults" class="search-results"></div>
                     </div>
 
-                    <!-- Details / Manuelle Eingabe -->
-                    <div class="manual-form-grid">
-                        <div class="form-group full-width">
-                            <label>Name</label>
-                            <input type="text" id="manualName" placeholder="z.B. Banane">
+                    <!-- Hauptaktionen Kacheln -->
+                    <div class="action-grid">
+                        <div class="action-card ai-card">
+                            <label for="cameraInput" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; z-index: 1;">
+                                <div class="card-icon">📸</div>
+                                <span class="card-title">AI Foto-Scan</span>
+                                <span class="card-desc">Essen per Foto erkennen</span>
+                            </label>
+                            <input type="file" id="cameraInput" accept="image/*" capture="environment">
+                            
+                            <!-- Galerie Upload Button -->
+                            <label for="galleryInput" style="position: absolute; bottom: 8px; right: 8px; width: 34px; height: 34px; background: rgba(255,255,255,0.08); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 2; border: 1px solid var(--glass-border); transition: var(--transition-smooth);">
+                                🖼️
+                            </label>
+                            <input type="file" id="galleryInput" accept="image/*" multiple>
+                        </div>
+                        
+                        <div id="recipesBtn" class="action-card recipe-card">
+                            <div class="card-icon">📖</div>
+                            <span class="card-title">Meine Rezepte</span>
+                            <span class="card-desc">Vorlagen schnell hinzufügen</span>
+                        </div>
+                    </div>
+
+                    <!-- Manuelle Eingabe direkt sichtbar im Add-Tab (als Glass Card) -->
+                    <div id="manualEntryFormContainer" class="glass-card">
+                        <div class="manual-entry-header" style="border-bottom:none; padding-bottom:0; margin-bottom:15px;">
+                            <h3 style="font-family:'Outfit',sans-serif; margin:0;">Zutaten manuell eintragen</h3>
+                        </div>
+                        
+                        <div class="manual-form-grid">
+                            <div class="form-group">
+                                <label>Lebensmittel-Name</label>
+                                <input type="text" id="manualName" placeholder="z.B. Vollkornbrot">
+                            </div>
+
+                            <div class="form-group">
+                                <label>Menge & Einheit</label>
+                                <div class="amount-row">
+                                    <input type="number" id="manualAmount" placeholder="0" inputmode="decimal">
+                                    <select id="manualUnit" class="small-select">
+                                        <option value="g">g</option>
+                                        <option value="ml">ml</option>
+                                        <option value="Stk.">Stk.</option>
+                                    </select>
+                                </div>
+                                <div class="quick-amounts" id="quickAmountsContainer">
+                                    <button class="quick-amt-btn" data-value="100">100</button>
+                                    <button class="quick-amt-btn" data-value="250">250</button>
+                                    <button class="quick-amt-btn" data-value="500">500</button>
+                                    <button class="quick-amt-btn" data-value="1000">1000</button>
+                                </div>
+                            </div>
+
+                            <div class="macro-inputs-grid">
+                                <div class="macro-input calories">
+                                    <label>Kcal</label>
+                                    <input type="number" id="manualCalories" placeholder="0" inputmode="decimal">
+                                </div>
+                                <div class="macro-input protein">
+                                    <label>Prot</label>
+                                    <input type="number" id="manualProtein" placeholder="0" inputmode="decimal">
+                                </div>
+                                <div class="macro-input fat">
+                                    <label>Fett</label>
+                                    <input type="number" id="manualFat" placeholder="0" inputmode="decimal">
+                                </div>
+                                <div class="macro-input carbs">
+                                    <label>Carbs</label>
+                                    <input type="number" id="manualCarbs" placeholder="0" inputmode="decimal">
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="form-group full-width">
-                            <label>Menge & Einheit</label>
-                            <div class="amount-row">
-                                <input type="number" id="manualAmount" placeholder="0" inputmode="decimal">
-                                <select id="manualUnit" class="styled-select small-select">
-                                    <option value="g">g</option>
-                                    <option value="ml">ml</option>
-                                    <option value="Stk.">Stk.</option>
+                        <div style="display: flex; gap: 10px; margin-top: 20px;">
+                            <button id="saveManualEntryBtn" class="primary-btn" style="flex: 1;">Hinzufügen</button>
+                            <button id="saveManualAsRecipeBtn" class="secondary-btn" style="flex: 0 0 54px; padding:0; display:flex; align-items:center; justify-content:center;" title="Als Rezept speichern">
+                                💾
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Das KI-Resultat wird ebenfalls direkt hier elegant eingebunden -->
+                    <div id="resultArea" class="result hidden"></div>
+                </div>
+
+                <!-- TAB 3: REZEPTE VORLAGEN -->
+                <div id="tab-recipes" class="tab-content">
+                    <div class="glass-card">
+                        <div class="manual-entry-header" style="border-bottom:none; padding-bottom:0; margin-bottom:15px;">
+                            <h3 style="font-family:'Outfit',sans-serif; margin:0;">Rezept-Bibliothek</h3>
+                        </div>
+                        <div id="recipesList" class="recipes-list">
+                            <!-- Wird per JS gefüllt -->
+                        </div>
+                        <button id="createNewRecipeBtn" class="primary-btn" style="margin-top: 20px; width: 100%;">+ Neues Rezept erstellen</button>
+                    </div>
+                </div>
+
+                <!-- TAB 4: PROFIL, ZIELE & EINSTELLUNGEN -->
+                <div id="tab-profile" class="tab-content">
+                    <div class="glass-card">
+                        <div class="manual-entry-header" style="border-bottom:none; padding-bottom:0; margin-bottom:15px;">
+                            <h3 style="font-family:'Outfit',sans-serif; margin:0;">Profil & Ziele</h3>
+                        </div>
+                        
+                        <div class="profile-section">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                <h4 style="margin: 0; font-family:'Outfit',sans-serif; font-size:14px;">Bedarfs-Rechner</h4>
+                                <span id="infoIconBtn" style="color: var(--text-secondary); cursor: pointer; font-size: 16px;">ℹ️</span>
+                            </div>
+
+                            <div id="infoText" class="info-box hidden">
+                                <p style="margin: 0; font-size: 11px; color: var(--text-secondary); line-height: 1.5;">
+                                    <strong>Mifflin-St Jeor Formel:</strong><br>
+                                    📉 <strong>Abnehmen:</strong> -500 kcal Defizit.<br>
+                                    💪 <strong>Aufbau:</strong> +300 kcal Überschuss.<br>
+                                    🥩 <strong>Protein:</strong> 1.6g - 2.0g pro kg Körpergewicht.
+                                </p>
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom:12px;">
+                                <label>Deine Zielsetzung</label>
+                                <select id="profileGoal">
+                                    <option value="maintain">Gewicht halten</option>
+                                    <option value="lose">Gewicht reduzieren (Defizit)</option>
+                                    <option value="gain">Muskelaufbau (Überschuss)</option>
                                 </select>
                             </div>
-                            <div class="quick-amounts" id="quickAmountsContainer">
-                                <button class="quick-amt-btn" data-value="100">100</button>
-                                <button class="quick-amt-btn" data-value="250">250</button>
-                                <button class="quick-amt-btn" data-value="500">500</button>
-                                <button class="quick-amt-btn" data-value="1000">1000</button>
+
+                            <div class="profile-grid" style="margin-bottom:12px;">
+                                <div class="form-group"><label>Gewicht (kg)</label><input type="number" id="profileWeight" placeholder="z.B. 75"></div>
+                                <div class="form-group"><label>Größe (cm)</label><input type="number" id="profileHeight" placeholder="z.B. 180"></div>
+                            </div>
+                            
+                            <div class="profile-grid" style="margin-bottom:12px;">
+                                <div class="form-group"><label>Alter</label><input type="number" id="profileAge" placeholder="Jahre"></div>
+                                <div class="form-group"><label>Geschlecht</label>
+                                    <select id="profileGender">
+                                        <option value="male">Mann</option>
+                                        <option value="female">Frau</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom:15px;">
+                                <label>Aktivitätslevel</label>
+                                <select id="profileActivity">
+                                    <option value="1.2">Wenig Bewegung (Büro)</option>
+                                    <option value="1.375">Leicht aktiv (1-3x Sport/Woche)</option>
+                                    <option value="1.55">Moderat aktiv (3-5x Sport/Woche)</option>
+                                    <option value="1.725">Sehr aktiv (6-7x Sport/Woche)</option>
+                                </select>
+                            </div>
+
+                            <button id="calcProfileBtn" class="secondary-btn" style="width: 100%; font-size:13px; font-weight:700;">🧮 Bedarf automatisch berechnen</button>
+                        </div>
+
+                        <!-- Makro Tageslimits -->
+                        <div class="profile-section">
+                            <h4 style="margin: 0 0 12px 0; font-family:'Outfit',sans-serif; font-size:14px;">Deine Tageslimits (anpassbar)</h4>
+                            <div class="macro-inputs-grid">
+                                <div class="macro-input calories"><label>Kcal</label><input type="number" id="goalCalories" placeholder="2500"></div>
+                                <div class="macro-input protein"><label>Prot</label><input type="number" id="goalProtein" placeholder="150"></div>
+                                <div class="macro-input fat"><label>Fett</label><input type="number" id="goalFat" placeholder="80"></div>
+                                <div class="macro-input carbs"><label>Carbs</label><input type="number" id="goalCarbs" placeholder="300"></div>
+                            </div>
+                            <div class="form-group" style="margin-top: 12px;">
+                                <label>Tägliches Wasserziel (ml)</label>
+                                <input type="number" id="goalWater" placeholder="2500" style="text-align: center; font-weight:700;">
                             </div>
                         </div>
 
-                        <div class="macros-row">
-                            <div class="macro-input calories">
-                                <label>Kalorien</label>
-                                <input type="number" id="manualCalories" placeholder="0" inputmode="decimal">
+                        <!-- API-Keys -->
+                        <div class="profile-section">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                <h4 style="margin: 0; font-family:'Outfit',sans-serif; font-size:14px;">API-Schlüssel (Erweitert)</h4>
+                                <span id="apiUsageDisplay" style="font-size: 10px; color: var(--text-muted); background: rgba(255,255,255,0.03); padding: 4px 10px; border-radius: 8px; font-weight:700;">Heute: 0</span>
                             </div>
-                            <div class="macro-input protein">
-                                <label>Protein</label>
-                                <input type="number" id="manualProtein" placeholder="0" inputmode="decimal">
+                            <div class="form-group" style="margin-bottom:10px;">
+                                <label>Google Gemini API-Key</label>
+                                <input type="text" id="profileGeminiKey" placeholder="Gemini API Key eintragen" style="font-size:12px;">
                             </div>
-                            <div class="macro-input fat">
-                                <label>Fett</label>
-                                <input type="number" id="manualFat" placeholder="0" inputmode="decimal">
-                            </div>
-                            <div class="macro-input carbs">
-                                <label>Carbs</label>
-                                <input type="number" id="manualCarbs" placeholder="0" inputmode="decimal">
+                            <div class="form-group">
+                                <label>OpenAI API-Key (Optional)</label>
+                                <input type="text" id="profileOpenAIKey" placeholder="OpenAI API Key eintragen" style="font-size:12px;">
                             </div>
                         </div>
-                    </div>
 
-                    <div style="display: flex; gap: 10px; margin-top: 20px;">
-                        <button id="saveManualEntryBtn" class="primary-btn" style="flex: 1;">Hinzufügen</button>
-                        <button id="saveManualAsRecipeBtn" class="secondary-btn" style="flex: 0 0 60px; border-color: #9c27b0; color: #e1bee7; display: flex; align-items: center; justify-content: center;" title="Als Rezept speichern">
-                            <svg class="icon-svg" viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z"/></svg>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Profil Modal (API Keys & Logout) -->
-            <div id="profileModal" class="manual-entry-box hidden">
-                <div class="manual-entry-header">
-                    <h3>Profil & Einstellungen</h3>
-                    <button id="closeProfileBtn" class="close-modal-btn">X</button>
-                </div>
-                
-                <!-- Bereich 1: Körperdaten & Berechnung -->
-                <div class="profile-section">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                        <h4 class="section-title" style="margin: 0;">Dein Ziel & Körper</h4>
-                        <svg id="infoIconBtn" class="icon-svg" viewBox="0 0 24 24" style="color: #bf5af2; cursor: pointer; width: 20px; height: 20px;">
-                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
-                        </svg>
-                    </div>
-
-                    <div id="infoText" class="info-box hidden">
-                        <p style="margin: 0; font-size: 12px; color: #ccc; line-height: 1.5;">
-                            <strong>Berechnungsgrundlage:</strong><br>
-                            Wir nutzen die <em>Mifflin-St Jeor Formel</em> (Goldstandard).<br>
-                            📉 <strong>Abnehmen:</strong> Defizit von 500 kcal.<br>
-                            💪 <strong>Aufbau:</strong> Überschuss von 300 kcal.<br>
-                            🥩 <strong>Protein:</strong> 1.6g - 2.0g pro kg Körpergewicht.
-                        </p>
-                    </div>
-                    
-                    <div class="form-group full-width">
-                        <label>Zielsetzung</label>
-                        <select id="profileGoal" class="styled-select">
-                            <option value="maintain">Gewicht halten</option>
-                            <option value="lose">Abnehmen (Defizit)</option>
-                            <option value="gain">Muskelaufbau (Überschuss)</option>
-                        </select>
-                    </div>
-
-                    <div class="profile-grid">
-                        <div class="form-group"><label>Gewicht (kg)</label><input type="number" id="profileWeight" placeholder="kg"></div>
-                        <div class="form-group"><label>Größe (cm)</label><input type="number" id="profileHeight" placeholder="cm"></div>
-                        <div class="form-group"><label>Alter</label><input type="number" id="profileAge" placeholder="Jahre"></div>
-                        <div class="form-group"><label>Geschlecht</label>
-                            <select id="profileGender" class="styled-select">
-                                <option value="male">Mann</option>
-                                <option value="female">Frau</option>
-                            </select>
+                        <!-- Aktionen -->
+                        <div style="display: flex; flex-direction: column; gap: 10px; margin-top:20px;">
+                            <button id="saveProfileBtn" class="primary-btn" style="width: 100%;">Ziele speichern & übernehmen</button>
+                            <button id="logoutBtn" class="secondary-btn" style="width: 100%; color: var(--accent-red); border-color: rgba(239, 68, 68, 0.2);">Konto abmelden</button>
+                            
+                            <!-- Ergänzter Daten-Export (JSON) im Profil -->
+                            <button id="exportDataBtn" class="secondary-btn" style="width: 100%; border-color: rgba(59, 130, 246, 0.2); color: var(--accent-blue);">📥 Ernährungsdaten exportieren (JSON)</button>
+                            
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                                <button id="openLegalBtn" class="secondary-btn" style="padding: 10px; font-size:11px; border:none; background: rgba(255,255,255,0.03);">⚖️ Rechtliches</button>
+                                <button id="openTutorialBtn" class="secondary-btn" style="padding: 10px; font-size:11px; border:none; background: rgba(255,255,255,0.03); color: var(--text-secondary);">❓ Hilfe & Key</button>
+                            </div>
                         </div>
+                        <p style="font-size: 9px; color: var(--text-muted); text-align: center; margin-top: 24px; font-weight:700;">NUTRISCAN PWA v9.0 • Entwickelt mit ❤️</p>
                     </div>
-                    
-                    <div class="form-group full-width" style="margin-top: 10px;">
-                        <label>Aktivitätslevel</label>
-                        <select id="profileActivity" class="styled-select">
-                            <option value="1.2">Wenig Bewegung (Büro)</option>
-                            <option value="1.375">Leicht aktiv (1-3x Sport/Woche)</option>
-                            <option value="1.55">Moderat aktiv (3-5x Sport/Woche)</option>
-                            <option value="1.725">Sehr aktiv (6-7x Sport/Woche)</option>
-                        </select>
-                    </div>
-
-                    <button id="calcProfileBtn" class="secondary-btn" style="margin: 15px 0; font-size: 14px; padding: 12px;">🧮 Bedarf automatisch berechnen</button>
                 </div>
+            </main>
 
-                <!-- Bereich 2: Tageslimits (Ergebnis) -->
-                <div class="profile-section">
-                    <h4 class="section-title">Deine Tageslimits (Manuell anpassbar)</h4>
-                    <div class="macros-row">
-                        <div class="macro-input calories"><label>Kcal</label><input type="number" id="goalCalories" placeholder="2500"></div>
-                        <div class="macro-input protein"><label>Prot</label><input type="number" id="goalProtein" placeholder="150"></div>
-                        <div class="macro-input fat"><label>Fett</label><input type="number" id="goalFat" placeholder="80"></div>
-                        <div class="macro-input carbs"><label>Carbs</label><input type="number" id="goalCarbs" placeholder="300"></div>
-                    </div>
-                    <div class="form-group full-width" style="margin-top: 10px;"><label>Wasserziel (ml)</label><input type="number" id="goalWater" placeholder="2500" style="text-align: center;"></div>
-                </div>
-
-                <div class="profile-section" style="margin-top: 20px; border-top: 1px solid #222; padding-top: 20px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                        <h4 class="section-title" style="margin: 0;">API Keys (Erweitert)</h4>
-                        <span id="apiUsageDisplay" style="font-size: 11px; color: #666; background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 6px;">Heute: 0</span>
-                    </div>
-                    <input type="text" id="profileGeminiKey" placeholder="Google Gemini API Key" style="margin-bottom: 10px;">
-                    <input type="text" id="profileOpenAIKey" placeholder="OpenAI API Key (Optional)">
-                </div>
-
-                <button id="saveProfileBtn" class="primary-btn" style="margin-top: 20px;">Speichern & Schließen</button>
-                <button id="logoutBtn" class="secondary-btn" style="margin-top: 10px; border-color: #ff453a; color: #ff453a;">Abmelden</button>
-                <button id="openLegalBtn" class="secondary-btn" style="margin-top: 10px; font-size: 12px; padding: 10px; border: none; background: rgba(255,255,255,0.05);">⚖️ Datenschutz & Impressum</button>
-                <button id="openTutorialBtn" class="secondary-btn" style="margin-top: 5px; font-size: 12px; padding: 10px; border: none; background: rgba(255,255,255,0.05); color: #bf5af2;">❓ Anleitung & Hilfe</button>
-                <p style="font-size: 10px; color: #555; text-align: center; margin-top: 20px;">App Version: v8.0</p>
-            </div>
-
-            <!-- Hauptaktionen: Grid Layout -->
-            <div class="action-grid">
-                <!-- AI Scan Kachel -->
-                <div class="action-card ai-card" style="position: relative;">
-                    <label for="cameraInput" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; z-index: 1;">
-                        <div class="card-icon">
-                            <svg class="icon-svg" style="width: 32px; height: 32px;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
-                        </div>
-                        <span class="card-title">AI Foto Scan</span>
-                        <span class="card-desc">Erkennt dein Essen automatisch</span>
-                    </label>
-                    <input type="file" id="cameraInput" accept="image/*" capture="environment">
-                    
-                    <label for="galleryInput" style="position: absolute; bottom: 10px; right: 10px; width: 40px; height: 40px; background: rgba(255,255,255,0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 2; backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.2);">
-                        <svg class="icon-svg" viewBox="0 0 24 24" style="width: 20px; height: 20px;"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
-                    </label>
-                    <input type="file" id="galleryInput" accept="image/*" multiple>
-                </div>
-                
-                <!-- Rezepte Kachel -->
-                <button id="recipesBtn" class="action-card recipe-card">
-                    <div class="card-icon">
-                        <svg class="icon-svg" style="width: 32px; height: 32px;" viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z"/></svg>
-                    </div>
-                    <span class="card-title">Rezepte</span>
-                    <span class="card-desc">Deine Sammlung & Vorlagen</span>
+            <!-- FLOATING NAVIGATION BAR -->
+            <nav class="bottom-nav">
+                <button class="nav-item active" data-tab="dashboard">
+                    <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM9 22V12h6v10"/></svg>
+                    <span>Heute</span>
                 </button>
-            </div>
-            
-            <!-- Analyse Modal (Neu gestaltet) -->
-            <div id="analysisModal" class="manual-entry-box hidden">
+                <button class="nav-item nav-item-scan" data-tab="scan" title="Foto-Scan & Mahlzeit hinzufügen">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9z"/></svg>
+                </button>
+                <button class="nav-item" data-tab="recipes">
+                    <svg viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                    <span>Rezepte</span>
+                </button>
+                <button class="nav-item" data-tab="profile">
+                    <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/></svg>
+                    <span>Profil</span>
+                </button>
+            </nav>
+        </div>
+
+        <!-- ==========================================
+             MODALS & OVERLAYS (STILL ACCESSIBLE VIA STACK)
+             ========================================== -->
+
+        <!-- A. KI Foto-Analyse Vorschau Modal (Neu gestaltet) -->
+        <div id="analysisModalOverlay" class="modal-overlay-bg">
+            <div id="analysisModal" class="manual-entry-box">
                 <div class="manual-entry-header">
-                    <h3>Analyse prüfen</h3>
+                    <h3 style="font-family:'Outfit',sans-serif; margin:0;">Scan überprüfen</h3>
                     <button id="closeAnalysisBtn" class="close-modal-btn">X</button>
                 </div>
                 
-                <div class="analysis-layout">
-                    <div class="image-wrapper" id="imagePreviewContainer">
+                <div class="analysis-layout" style="display:flex; flex-direction:column; gap:15px; background:rgba(0,0,0,0.25); padding:16px; border-radius:18px; border:1px solid var(--glass-border); margin:10px 0;">
+                    <div class="image-wrapper" id="imagePreviewContainer" style="display:flex; gap:8px; overflow-x:auto; width:100%; border:none; max-width:none; height:auto; padding:5px 0;">
                         <!-- Bilder werden hier eingefügt -->
                     </div>
                     <div class="input-wrapper">
-                        <label for="descriptionInput" style="font-size: 12px; color: #888; display: block; margin-bottom: 5px;">Notiz an die KI (Optional):</label>
-                        <textarea id="descriptionInput" placeholder="z.B. 'nur die Hälfte gegessen' oder 'mit extra Käse'" rows="2"></textarea>
+                        <label for="descriptionInput" style="font-size: 11px; font-weight:700; color: var(--text-secondary); display: block; margin-bottom: 6px;">Nachricht / Kontext für die KI (Optional):</label>
+                        <textarea id="descriptionInput" placeholder="z.B. 'nur eine halbe Portion gegessen' oder 'mit extra Parmesan'" rows="2" style="width:100%; background:rgba(0,0,0,0.3); border:1px solid var(--glass-border); border-radius:12px; color:white; padding:12px; font-size:13px; font-family:inherit; resize:none; outline:none; transition:var(--transition-smooth);"></textarea>
                     </div>
                 </div>
                 
@@ -342,198 +485,187 @@
                 <div class="toggle-row">
                     <div style="flex: 1;">
                         <div style="display: flex; align-items: center; gap: 6px;">
-                            <div style="font-weight: 600; font-size: 14px;">Marken-Scan (Hybrid)</div>
-                            <svg id="hybridInfoBtn" class="icon-svg" viewBox="0 0 24 24" style="width: 16px; height: 16px; color: #bf5af2; cursor: pointer; opacity: 0.8;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                            <div style="font-weight: 700; font-size: 13px; font-family:'Outfit',sans-serif;">Marken-Scan (Hybrid)</div>
+                            <span id="hybridInfoBtn" style="color: var(--text-secondary); cursor: pointer; font-size:13px;">ℹ️</span>
                         </div>
-                        <div style="font-size: 11px; color: #888;">Für verpackte Produkte (Datenbank-Check)</div>
+                        <div style="font-size: 10px; color: var(--text-secondary); margin-top:2px;">Für Fertigprodukte & Supermarkt-Brands</div>
                     </div>
                     <label class="switch"><input type="checkbox" id="hybridModeToggle"><span class="slider"></span></label>
                 </div>
                 
-                <div id="hybridInfoText" class="info-box hidden" style="margin-top: -5px;">
-                    <p style="margin: 0; font-size: 12px; color: #ccc; line-height: 1.4;">
-                        <strong>So funktioniert's:</strong><br>
-                        1. Die KI sucht nach Marken/Produkten (z.B. "Barilla Pesto").<br>
-                        2. App lädt <strong>echte Nährwerte</strong> aus der Datenbank.<br>
-                        3. KI berechnet damit die exakte Menge.<br>
-                        <em style="color: #bf5af2; display: block; margin-top: 5px;">Ideal für Supermarkt-Produkte, nicht für Selbstgekochtes.</em>
-                        <br>
-                        <span style="color: #ff453a; display: block; margin-top: 8px; font-weight: bold;">⚠️ Hinweis: Verbraucht 2 API-Anfragen! (Google Free Tier hat ca. 20 Anfragen/Tag).</span>
+                <div id="hybridInfoText" class="info-box hidden" style="margin-top: -5px; font-size:11px;">
+                    <p style="margin: 0; color: var(--text-secondary); line-height: 1.5;">
+                        <strong>Funktionsweise:</strong><br>
+                        1. KI identifiziert die Marke (z.B. "Chio Chips").<br>
+                        2. Die App ruft die <strong>echten Nährwerte</strong> aus der OFF-Datenbank ab.<br>
+                        3. Die KI schätzt die exakte Portionsmenge auf dem Foto.<br>
+                        <span style="color: var(--accent-red); display: block; margin-top: 5px; font-weight:700;">⚠️ Verbraucht 2 API-Anfragen!</span>
                     </p>
                 </div>
 
-                <button id="analyzeBtn" class="primary-btn" style="margin-top: 10px;">Jetzt analysieren ✨</button>
+                <button id="analyzeBtn" class="primary-btn" style="margin-top: 10px; width: 100%;">Jetzt analysieren ✨</button>
             </div>
+        </div>
 
-            <div id="resultArea" class="result hidden"></div>
+        <!-- B. Barcode Scanner Kamera Modal (Vollbild) -->
+        <div id="scannerModalOverlay" class="modal-overlay-bg">
+            <div id="scannerModal" class="manual-entry-box">
+                <div class="manual-entry-header" style="position: absolute; top: 30px; left: 20px; right: 20px; z-index: 10; border-bottom: none; display:flex; justify-content:space-between; align-items:center;">
+                    <h3 style="text-shadow: 0 2px 8px rgba(0,0,0,0.8); font-family:'Outfit',sans-serif; margin:0; font-size:18px;">Barcode Scannen</h3>
+                    <button id="closeScannerBtn" class="close-modal-btn" style="background: rgba(0,0,0,0.6); border-radius: 50%; width: 36px; height: 36px; display:flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,0.1); color:white; font-weight:bold;">X</button>
+                </div>
+                <div id="reader"></div>
+                
+                <!-- Visuelles Feedback Overlay -->
+                <div class="scanner-overlay">
+                    <div class="scanner-box">
+                        <div class="scanner-corner top-left"></div>
+                        <div class="scanner-corner top-right"></div>
+                        <div class="scanner-corner bottom-left"></div>
+                        <div class="scanner-corner bottom-right"></div>
+                        <div class="scanner-line"></div>
+                    </div>
+                    <p style="margin-top: 24px; color: white; background: rgba(18,12,28,0.85); padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: 700; border:1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px);">Barcode zentrieren</p>
+                </div>
+            </div>
+        </div>
 
-            <!-- Rezepte Modal -->
-            <div id="recipesModal" class="manual-entry-box hidden">
+        <!-- C. Barcode Ergebnis Modal -->
+        <div id="barcodeResultModalOverlay" class="modal-overlay-bg">
+            <div id="barcodeResultModal" class="manual-entry-box">
                 <div class="manual-entry-header">
-                    <h3>Meine Rezepte</h3>
-                    <button id="closeRecipesBtn" class="close-modal-btn">X</button>
+                    <h3 style="font-family:'Outfit',sans-serif; margin:0;">Produkt gefunden</h3>
+                    <button id="closeBarcodeResultBtn" class="close-modal-btn">X</button>
                 </div>
-                <div id="recipesList" class="recipes-list">
-                    <!-- Liste wird per JS gefüllt -->
+                <h4 id="barcodeProductName" style="margin: 15px 0 5px 0; color: var(--accent-blue); font-size: 18px; font-family:'Outfit',sans-serif; font-weight:800;"></h4>
+                <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 20px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 10px; border:1px solid var(--glass-border); font-weight:600;">
+                    Nährwertbasis: <span id="barcode100gInfo" style="color:white; font-weight:700;"></span>
                 </div>
-                <button id="createNewRecipeBtn" class="primary-btn" style="margin-top: 15px;">+ Neues Rezept erstellen</button>
-            </div>
+                
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label>Gegessene Menge (g oder ml):</label>
+                    <input type="number" id="barcodeWeight" value="100" placeholder="Gramm" inputmode="decimal" style="font-size: 20px; font-weight: 800; color: var(--accent-green); text-align:center; font-family:'Outfit',sans-serif;">
+                </div>
+                
+                <div id="barcodeCalculatedStats" style="margin: 20px 0; text-align: center; color: #fff;"></div>
 
-            <!-- Rezept Erstellen Modal -->
-            <div id="createRecipeModal" class="manual-entry-box hidden">
+                <button id="saveBarcodeEntryBtn" class="primary-btn" style="width: 100%;">Hinzufügen</button>
+            </div>
+        </div>
+
+        <!-- D. Rezept Erstellen Modal -->
+        <div id="createRecipeModalOverlay" class="modal-overlay-bg">
+            <div id="createRecipeModal" class="manual-entry-box">
                  <div class="manual-entry-header">
-                    <h3>Rezept erstellen</h3>
+                    <h3 style="font-family:'Outfit',sans-serif; margin:0;">Rezept erstellen</h3>
                     <button id="closeCreateRecipeBtn" class="close-modal-btn">X</button>
                 </div>
-                <div class="manual-form-grid">
-                     <div class="form-group full-width">
-                        <label>Name des Gerichts</label>
-                        <input type="text" id="recipeName" placeholder="z.B. Mein Frühstück">
+                <div class="manual-form-grid" style="margin-top: 15px;">
+                     <div class="form-group">
+                        <label>Gericht-Name</label>
+                        <input type="text" id="recipeName" placeholder="z.B. Protein Pancakes">
                     </div>
-                    <div class="macros-row">
+                    <div class="macro-inputs-grid">
                         <div class="macro-input calories"><label>Kcal</label><input type="number" id="recipeCalories" placeholder="0"></div>
                         <div class="macro-input protein"><label>Prot</label><input type="number" id="recipeProtein" placeholder="0"></div>
                         <div class="macro-input fat"><label>Fett</label><input type="number" id="recipeFat" placeholder="0"></div>
                         <div class="macro-input carbs"><label>Carbs</label><input type="number" id="recipeCarbs" placeholder="0"></div>
                     </div>
                 </div>
-                <button id="saveNewRecipeBtn" class="primary-btn" style="margin-top: 20px;">Rezept speichern</button>
+                <button id="saveNewRecipeBtn" class="primary-btn" style="margin-top: 24px; width:100%;">Rezept in Bibliothek speichern</button>
             </div>
+        </div>
 
-            <p class="disclaimer-text">⚠️ Hinweis: Alle Werte sind KI-generierte Schätzungen und dienen nur zur groben Orientierung.</p>
-        </main>
-
-        <!-- Scanner Modal (Vollbild) -->
-        <div id="scannerModal" class="manual-entry-box hidden" style="width: 100%; height: 100%; max-width: none; max-height: none; border-radius: 0; background: #000; top: 0; left: 0; transform: none; padding: 0; border: none; box-shadow: none;">
-            <div class="manual-entry-header" style="position: absolute; top: 40px; left: 20px; right: 20px; z-index: 10; border-bottom: none;">
-                <h3 style="text-shadow: 0 2px 4px rgba(0,0,0,0.8);">Barcode Scannen</h3>
-                <button id="closeScannerBtn" class="close-modal-btn" style="background: rgba(0,0,0,0.5); border-radius: 50%; width: 40px; height: 40px;">X</button>
-            </div>
-            <div id="reader" style="width: 100%; height: 100%; object-fit: cover;"></div>
-            
-            <!-- Visuelles Feedback Overlay -->
-            <div class="scanner-overlay">
-                <div class="scanner-box">
-                    <div class="scanner-corner top-left"></div>
-                    <div class="scanner-corner top-right"></div>
-                    <div class="scanner-corner bottom-left"></div>
-                    <div class="scanner-corner bottom-right"></div>
-                    <div class="scanner-line"></div>
+        <!-- E. Rechtliches & Datenschutz Modal (Datenschutz & Impressum) -->
+        <div id="legalModalOverlay" class="modal-overlay-bg">
+            <div id="legalModal" class="manual-entry-box">
+                <div class="manual-entry-header">
+                    <h3 style="font-family:'Outfit',sans-serif; margin:0;">Datenschutz & Rechtliches</h3>
+                    <button id="closeLegalBtn" class="close-modal-btn">X</button>
                 </div>
-                <p style="margin-top: 30px; color: white; background: rgba(0,0,0,0.5); padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 500; backdrop-filter: blur(5px);">Barcode im Rahmen platzieren</p>
-            </div>
-        </div>
+                <div class="legal-content">
+                    <h4 style="color: white; margin-bottom: 6px; font-family:'Outfit',sans-serif; font-size:14px; margin-top:15px;">1. Datenspeicherung</h4>
+                    <p style="font-size:12px; color:var(--text-secondary); line-height:1.5; margin:0 0 12px 0;">Deine Ernährungsdaten, Rezepte und Profileinstellungen werden sicher in einer <strong>Google Firebase Cloud-Datenbank</strong> (Cloud Firestore) verschlüsselt gespeichert. Die Authentifizierung erfolgt ebenfalls über Google Firebase Auth.</p>
+                    
+                    <h4 style="color: white; margin-bottom: 6px; font-family:'Outfit',sans-serif; font-size:14px;">2. Genutzte Schnittstellen (APIs)</h4>
+                    <p style="font-size:12px; color:var(--text-secondary); line-height:1.5; margin:0 0 12px 0;">Zur AI-Bildanalyse werden Fotos an die offizielle Google Gemini API gesendet. Die Bilder werden dort laut Datenschutzrichtlinien nur verarbeitet und nicht dauerhaft gespeichert.</p>
+                    <p style="font-size:12px; color:var(--text-secondary); line-height:1.5; margin:0 0 12px 0;">Produktdaten und Barcodes werden aus der freien, gemeinschaftlichen Open Food Facts Datenbank abgerufen (ODbL).</p>
 
-        <!-- Barcode Ergebnis Modal -->
-        <div id="barcodeResultModal" class="manual-entry-box hidden">
-            <div class="manual-entry-header">
-                <h3>Produkt gefunden</h3>
-                <button id="closeBarcodeResultBtn" class="close-modal-btn">X</button>
-            </div>
-            <h4 id="barcodeProductName" style="margin: 0 0 10px 0; color: #0a84ff; font-size: 18px;"></h4>
-            <div style="font-size: 13px; color: #888; margin-bottom: 20px; background: #1a1a1a; padding: 10px; border-radius: 8px;">
-                Basis: <span id="barcode100gInfo"></span>
-            </div>
-            
-            <label style="font-size: 14px; color: #ccc; display: block; margin-bottom: 8px;">Gegessene Menge (g/ml):</label>
-            <input type="number" id="barcodeWeight" value="100" placeholder="Gramm" inputmode="decimal" style="font-size: 20px; font-weight: bold; color: #30d158;">
-            
-            <div id="barcodeCalculatedStats" style="margin: 20px 0; text-align: center; color: #fff;"></div>
+                    <h4 style="color: white; margin-bottom: 6px; font-family:'Outfit',sans-serif; font-size:14px;">3. Verschlüsselung</h4>
+                    <p style="font-size:12px; color:var(--text-secondary); line-height:1.5; margin:0 0 12px 0;">Um maximale Privatsphäre zu gewährleisten, werden deine sensiblen Daten (Gemini-Key, Ernährungsverlauf, Rezepte, Körperwerte) direkt **auf deinem Gerät (Client-Side)** mit modernem AES-GCM (256-Bit) verschlüsselt, bevor sie in die Firebase-Cloud übertragen werden. Niemand außer dir (nicht einmal der Betreiber) kann diese Daten lesen.</p>
 
-            <button id="saveBarcodeEntryBtn" class="primary-btn">Hinzufügen</button>
-        </div>
-
-        </div>
-
-        <!-- Rechtliches & Datenschutz Modal (Außerhalb von app-content für Login-Zugriff) -->
-        <div id="legalModal" class="manual-entry-box hidden">
-            <div class="manual-entry-header">
-                <h3>Rechtliches</h3>
-                <button id="closeLegalBtn" class="close-modal-btn">X</button>
-            </div>
-            <div class="legal-content" style="font-size: 13px; color: #ccc; line-height: 1.6;">
-                <h4 style="color: white; margin-bottom: 5px;">1. Datenspeicherung</h4>
-                <p>Deine Ernährungsdaten, Rezepte und Profileinstellungen werden sicher in einer <strong>Google Firebase Datenbank</strong> (Cloud Firestore) gespeichert. Die Authentifizierung erfolgt ebenfalls über Google Firebase Auth.</p>
-                
-                <h4 style="color: white; margin-bottom: 5px; margin-top: 15px;">2. Genutzte APIs & Dienste</h4>
-                <ul style="padding-left: 20px; margin: 5px 0;">
-                    <li><strong>Google Gemini / OpenAI:</strong> Zur Bildanalyse werden Fotos an die API des jeweiligen Anbieters gesendet. Die Bilder werden dort laut Anbieter nur zur Analyse verarbeitet und nicht dauerhaft gespeichert (Stateless).</li>
-                    <li><strong>Open Food Facts:</strong> Produktdaten werden aus der Open Food Facts Datenbank abgerufen (Lizenz: ODbL).</li>
-                </ul>
-
-                <h4 style="color: white; margin-bottom: 5px; margin-top: 15px;">3. Lokaler Speicher (Cookies)</h4>
-                <p>Wir nutzen den lokalen Speicher deines Geräts (LocalStorage/Cookies), um deinen Login-Status, deine API-Keys (verschlüsselt) und App-Einstellungen zu speichern. Dies ist für die Funktion der App technisch notwendig.</p>
-
-                <h4 style="color: white; margin-bottom: 5px; margin-top: 15px;">4. Impressum & Kontakt</h4>
-                <p>Das vollständige Impressum und die Datenschutzerklärung findest du auf unserer Hauptseite:</p>
-                <a href="https://DEINE-HAUPT-DOMAIN.de/impressum" target="_blank" style="display: inline-block; margin-top: 10px; background: rgba(255,255,255,0.1); color: #fff; text-decoration: none; padding: 10px 15px; border-radius: 8px; font-weight: bold;">🌐 Zum Impressum öffnen</a>
-
-                <h4 style="color: white; margin-bottom: 5px; margin-top: 15px;">5. Medizinischer Haftungsausschluss</h4>
-                <p>Diese App dient ausschließlich Informationszwecken und zur groben Orientierung. Sie stellt <strong>keine medizinische Beratung</strong>, Diagnose oder Behandlung dar. Die berechneten Werte sind KI-generierte Schätzungen und können fehlerhaft sein.</p>
-                <p>Konsultiere bei gesundheitlichen Fragen oder vor einer Ernährungsumstellung immer einen Arzt oder Ernährungsberater. Der Betreiber übernimmt keine Haftung für die Richtigkeit der Daten oder gesundheitliche Folgen.</p>
-            </div>
-        </div>
-
-        <!-- Tutorial / First Run Modal -->
-        <div id="tutorialModal" class="manual-entry-box hidden">
-            <div class="manual-entry-header">
-                <h3>Erste Schritte 🚀</h3>
-                <button id="closeTutorialBtn" class="close-modal-btn">X</button>
-            </div>
-            <div style="font-size: 14px; color: #ddd; line-height: 1.6;">
-                <p>Willkommen bei NutriScan AI! Damit die App funktioniert, sind folgende Schritte nötig:</p>
-                
-                <div style="background: rgba(191, 90, 242, 0.1); border: 1px solid rgba(191, 90, 242, 0.3); padding: 15px; border-radius: 12px; margin-bottom: 15px;">
-                    <strong style="color: #bf5af2; display: block; margin-bottom: 5px;">1. Kostenlosen KI-Key holen</strong>
-                    Die App nutzt Google Gemini zur Bilderkennung. Du brauchst deinen eigenen (kostenlosen) Schlüssel.<br>
-                    <a href="https://aistudio.google.com/app/apikey" target="_blank" style="display: inline-block; margin-top: 10px; background: #bf5af2; color: white; text-decoration: none; padding: 8px 12px; border-radius: 8px; font-weight: bold;">🔑 Key hier erstellen</a>
+                    <h4 style="color: white; margin-bottom: 6px; font-family:'Outfit',sans-serif; font-size:14px;">4. Medizinischer Haftungsausschluss</h4>
+                    <p style="font-size:12px; color:var(--text-secondary); line-height:1.5; margin:0 0 12px 0;">Diese Anwendung dient ausschließlich Informationszwecken. Die berechneten Kalorien und Makronährstoffe sind KI-generierte Schätzungen und können Fehler aufweisen. Sie stellen keine medizinische Beratung dar.</p>
                 </div>
-
-                <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 12px; margin-bottom: 15px;">
-                    <strong style="color: white; display: block; margin-bottom: 5px;">2. Key eintragen</strong>
-                    Gehe ins Profil (👤 oben rechts) und füge den Key bei <strong>"Google Gemini API Key"</strong> ein.
-                </div>
-
-                <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 12px; margin-bottom: 15px;">
-                    <strong style="color: white; display: block; margin-bottom: 5px;">3. Körperdaten eintragen</strong>
-                    Damit dein Kalorienbedarf berechnet werden kann, trage bitte dein Gewicht, Größe und Alter im Profil ein.
-                </div>
-
-                <p>Danach kannst du einfach Fotos von deinem Essen machen!</p>
-                <button id="finishTutorialBtn" class="primary-btn">Verstanden, los geht's!</button>
             </div>
         </div>
 
-        <!-- Update Modal (Neu) -->
-        <div id="updateModal" class="manual-entry-box hidden" style="z-index: 9999;">
-            <div class="manual-entry-header">
-                <h3>Update verfügbar ✨</h3>
-            </div>
-            <div style="text-align: center; padding: 20px 0;">
-                <div style="font-size: 40px; margin-bottom: 15px;">📲</div>
-                <p style="color: #ddd; line-height: 1.5; margin-bottom: 25px;">Eine neue Version der App ist bereit!<br>Lade kurz neu, um die neuesten Features zu nutzen.</p>
-                <button id="refreshAppBtn" class="primary-btn" style="width: 100%;">Jetzt aktualisieren</button>
+        <!-- F. Tutorial / Key holen Modal -->
+        <div id="tutorialModalOverlay" class="modal-overlay-bg">
+            <div id="tutorialModal" class="manual-entry-box">
+                <div class="manual-entry-header">
+                    <h3 style="font-family:'Outfit',sans-serif; margin:0;">Erste Schritte 🚀</h3>
+                    <button id="closeTutorialBtn" class="close-modal-btn">X</button>
+                </div>
+                <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.6; margin-top:10px;">
+                    <p style="margin:0 0 15px 0;">Willkommen bei NutriScan AI! Damit du dein Essen scannen kannst, benötigst du einen eigenen (kostenlosen) Google Gemini API-Key.</p>
+                    
+                    <div style="background: var(--accent-blue-bg); border: 1px solid rgba(59, 130, 246, 0.25); padding: 16px; border-radius: 16px; margin-bottom: 16px;">
+                        <strong style="color: var(--accent-blue); display: block; margin-bottom: 6px; font-family:'Outfit',sans-serif;">1. Kostenlosen Key holen</strong>
+                        Klicke auf den Link unten, melde dich mit deinem Google-Konto an und erstelle deinen Key (dauert 30 Sek.).<br>
+                        <a href="https://aistudio.google.com/app/apikey" target="_blank" style="display: inline-block; margin-top: 12px; background: var(--accent-blue); color: white; text-decoration: none; padding: 10px 16px; border-radius: 12px; font-weight: bold; font-size:12px;">🔑 Key kostenlos erstellen</a>
+                    </div>
+
+                    <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--glass-border); padding: 14px; border-radius: 14px; margin-bottom: 16px;">
+                        <strong style="color: white; display: block; margin-bottom: 4px;">2. Key im Profil eintragen</strong>
+                        Kopiere den erstellten Key, trage ihn in deinem Profil bei "Google Gemini API-Key" ein und speichere.
+                    </div>
+
+                    <button id="finishTutorialBtn" class="primary-btn" style="width: 100%; margin-top: 10px;">Verstanden, los geht's!</button>
+                </div>
             </div>
         </div>
+
+        <!-- G. Update Verfügbar Modal -->
+        <div id="updateModalOverlay" class="modal-overlay-bg" style="z-index: 9999;">
+            <div id="updateModal" class="manual-entry-box">
+                <div class="manual-entry-header" style="border:none;">
+                    <h3 style="font-family:'Outfit',sans-serif; margin:0;">Update verfügbar ✨</h3>
+                </div>
+                <div style="text-align: center; padding: 15px 0;">
+                    <div style="font-size: 48px; margin-bottom: 15px;">📲</div>
+                    <p style="color: var(--text-secondary); line-height: 1.5; margin-bottom: 24px; font-size:13px;">Eine neue Version von NutriScan AI steht bereit!<br>Lade kurz neu, um die neuesten Features und Premium-Visuals zu aktivieren.</p>
+                    <button id="refreshAppBtn" class="primary-btn" style="width: 100%;">Jetzt aktualisieren</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- H. Legacy Modals & Placeholders (versteckt für JS-Kompatibilität) -->
+        <div id="profileModal" class="hidden"></div>
+        <div id="recipesModal" class="hidden"></div>
+        <div id="recipesModalOverlay" class="hidden"></div>
+        <div id="manualEntryForm" class="hidden"></div>
+        <div id="manualEntryFormOverlay" class="hidden"></div>
+
+        <!-- Lade-Spinner Overlay -->
+        <div id="loadingOverlay" class="loading-overlay hidden">
+            <img src="icon.svg" class="ai-loading-logo" alt="AI Processing">
+            <p id="loadingText" style="margin-top:15px; font-family:'Outfit',sans-serif; font-weight:800; font-size:16px; letter-spacing:1px;">Analysiere Mahlzeit...</p>
+        </div>
+
+        <!-- Cookie Banner -->
+        <div id="cookieBanner" class="cookie-banner hidden">
+            <p style="margin: 0; font-size: 12px; color: var(--text-secondary); line-height: 1.5;">🍪 Wir nutzen Cookies für den verschlüsselten Login (notwendig) und anonymisierte Statistiken zur App-Verbesserung (optional).</p>
+            <div class="cookie-buttons">
+                <button id="declineCookiesBtn" class="cookie-btn-secondary">Nur Notwendige</button>
+                <button id="acceptCookiesBtn" class="cookie-btn-primary">Alle akzeptieren</button>
+            </div>
+        </div>
+
+        <!-- Toast Benachrichtigungen -->
+        <div id="toast-container"></div>
+
     </div>
-
-    <!-- Lade-Overlay (Spinner) -->
-    <div id="loadingOverlay" class="loading-overlay hidden">
-        <img src="icon.svg" class="ai-loading-logo" alt="AI Processing">
-        <p id="loadingText">Lade...</p>
-    </div>
-
-    <!-- Cookie Banner -->
-    <div id="cookieBanner" class="cookie-banner hidden">
-        <p style="margin: 0; font-size: 13px; color: #ddd; line-height: 1.4;">🍪 Wir nutzen Cookies für den Login (notwendig) und zur Verbesserung der App (optional).</p>
-        <div class="cookie-buttons">
-            <button id="declineCookiesBtn" class="cookie-btn-secondary">Nur Notwendige</button>
-            <button id="acceptCookiesBtn" class="cookie-btn-primary">Alle akzeptieren</button>
-        </div>
-    </div>
-
-    <!-- Toast Container für Benachrichtigungen -->
-    <div id="toast-container"></div>
 
     <script type="module" src="app.js"></script>
 </body>
